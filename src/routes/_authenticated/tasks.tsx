@@ -115,7 +115,11 @@ function TasksPage() {
         action={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild><Button><Plus className="mr-1 h-4 w-4" /> New task</Button></DialogTrigger>
-            <TaskDialog goals={goals.data ?? []} onSave={(t, i) => create.mutate({ task: t, intention: i })} />
+            <TaskDialog
+              goals={goals.data ?? []}
+              saving={create.isPending}
+              onSave={(t, i) => create.mutate({ task: t, intention: i })}
+            />
           </Dialog>
         }
       />
