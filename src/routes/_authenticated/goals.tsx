@@ -97,12 +97,19 @@ function GoalsPage() {
         }
       />
 
-      {goals.data && goals.data.length > 0 ? (
+      {goals.isPending ? (
+        <Card><CardContent className="p-12 text-center text-sm text-muted-foreground">Loading your goals…</CardContent></Card>
+      ) : goals.isError ? (
+        <Card><CardContent className="p-12 text-center">
+          <p className="text-sm text-destructive">Could not load goals. Check your connection and try again.</p>
+          <Button variant="outline" size="sm" className="mt-3" onClick={() => goals.refetch()}>Retry</Button>
+        </CardContent></Card>
+      ) : goals.data && goals.data.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2">
           {goals.data.map((g) => (
             <Card key={g.id}>
               <CardContent className="p-5">
-                <div className="mb-2 flex items-center gap-2">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
                   <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] uppercase tracking-wider text-accent-foreground">{g.category}</span>
                   <span className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider ${
                     g.priority === "High" ? "bg-destructive/10 text-destructive" :
@@ -114,7 +121,7 @@ function GoalsPage() {
                 <h3 className="text-lg font-semibold">{g.title}</h3>
                 {g.why_it_matters && <p className="mt-2 text-sm text-muted-foreground"><span className="font-medium text-foreground">Why:</span> {g.why_it_matters}</p>}
                 {g.smallest_next_action && <p className="mt-1 text-sm text-muted-foreground"><span className="font-medium text-foreground">Next:</span> {g.smallest_next_action}</p>}
-                <div className="mt-4 flex items-center gap-2">
+                <div className="mt-4 flex flex-wrap items-center gap-2">
                   <Select value={g.status} onValueChange={(v) => setStatus.mutate({ id: g.id, status: v })}>
                     <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
@@ -134,7 +141,7 @@ function GoalsPage() {
         </div>
       ) : (
         <Card><CardContent className="p-12 text-center">
-          <p className="text-muted-foreground">No goals yet. Add your first weekly outcome.</p>
+          <p className="text-muted-foreground">No goals yet. Create your first weekly goal.</p>
         </CardContent></Card>
       )}
     </PageContainer>
