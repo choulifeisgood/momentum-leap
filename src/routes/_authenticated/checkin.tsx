@@ -132,7 +132,7 @@ function CheckinPage() {
   );
 }
 
-function Slide({ label, value, min, max, step, onChange }: any) {
+function Slide({ label, value, min, max, step, onChange }: { label: string; value: number[]; min: number; max: number; step: number; onChange: (v: number[]) => void }) {
   return (
     <div>
       <Label className="mb-2 block">{label}</Label>
