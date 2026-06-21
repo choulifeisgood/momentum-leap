@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +21,7 @@ function SettingsPage() {
   const { user, signOut } = useAuth();
   const userId = user!.id;
   const qc = useQueryClient();
-  const navigate = useNavigate();
+  
   const [display_name, setName] = useState("");
   const [student_type, setType] = useState("High school");
 
