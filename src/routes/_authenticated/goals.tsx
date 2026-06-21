@@ -52,14 +52,21 @@ function GoalsPage() {
         const { error } = await supabase.from("weekly_goals").insert(payload);
         if (error) throw error;
       }
+      if (g.why_it_matters && g.why_it_matters.trim().length > 0) {
+        await supabase.from("achievements").upsert(
+          { user_id: userId, badge_name: "Future Self Builder", badge_description: "Set a goal with a clear 'why it matters'." },
+          { onConflict: "user_id,badge_name" },
+        );
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["goals"] });
       qc.invalidateQueries({ queryKey: ["dash-goals"] });
+      qc.invalidateQueries({ queryKey: ["all-badges"] });
       setOpen(false);
       toast.success("Goal saved.");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.message ?? "Could not save goal."),
   });
 
   const del = useMutation({
@@ -68,6 +75,7 @@ function GoalsPage() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["goals"] }),
+    onError: (e: any) => toast.error(e.message ?? "Could not delete goal."),
   });
 
   const setStatus = useMutation({
@@ -75,11 +83,20 @@ function GoalsPage() {
       const completed_at = status === "Completed" ? new Date().toISOString() : null;
       const { error } = await supabase.from("weekly_goals").update({ status, completed_at }).eq("id", id);
       if (error) throw error;
+      if (status === "Completed") {
+        await supabase.from("achievements").upsert(
+          { user_id: userId, badge_name: "Weekly Finisher", badge_description: "Completed a weekly goal." },
+          { onConflict: "user_id,badge_name" },
+        );
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["goals"] });
       qc.invalidateQueries({ queryKey: ["dash-goals"] });
+      qc.invalidateQueries({ queryKey: ["all-badges"] });
+      qc.invalidateQueries({ queryKey: ["dash-badges"] });
     },
+    onError: (e: any) => toast.error(e.message ?? "Could not update goal."),
   });
 
   return (
