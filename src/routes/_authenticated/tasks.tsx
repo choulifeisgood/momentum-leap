@@ -167,7 +167,7 @@ function TasksPage() {
   );
 }
 
-function TaskDialog({ goals, onSave }: { goals: any[]; onSave: (t: any, i: any) => void }) {
+function TaskDialog({ goals, onSave, saving }: { goals: any[]; saving: boolean; onSave: (t: any, i: any) => void }) {
   const [task, setTask] = useState<any>({
     title: "", weekly_goal_id: null, estimated_minutes: 25,
     difficulty: "Medium", task_type: "Deep Work", planned_time: "", status: "Not started",
@@ -222,7 +222,7 @@ function TaskDialog({ goals, onSave }: { goals: any[]; onSave: (t: any, i: any) 
           </div>
         </div>
 
-        <Button className="w-full" disabled={!task.title} onClick={() => onSave(task, intent)}>Save task</Button>
+        <Button className="w-full" disabled={!task.title || saving} onClick={() => onSave(task, intent)}>{saving ? "Saving…" : "Save task"}</Button>
       </div>
     </DialogContent>
   );
