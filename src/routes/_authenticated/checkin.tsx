@@ -53,15 +53,25 @@ function CheckinPage() {
       const { error } = await supabase.from("daily_checkins").upsert(payload, { onConflict: "user_id,date" });
       if (error) throw error;
 
-      // Award achievements
+      // Award per-check-in achievements (upsert prevents duplicates).
       const badges: { name: string; desc: string }[] = [];
-      if (form.sleep_hours >= 7.5) badges.push({ name: "Sleep Protected", desc: "Slept 7.5+ hours" });
-      if (form.deep_work_minutes >= 90) badges.push({ name: "Deep Work Starter", desc: "90+ minutes of deep work" });
-      if (form.exercise_today && form.healthy_eating_rating >= 4) badges.push({ name: "Healthy Routine Builder", desc: "Exercised and ate well" });
+      if (form.sleep_hours >= 7.5) badges.push({ name: "Sleep Protected", desc: "Slept 7.5+ hours and tracked it." });
+      if (form.deep_work_minutes >= 90) badges.push({ name: "Deep Work Starter", desc: "Logged 90+ minutes of deep work in a day." });
+      if (form.exercise_today && form.healthy_eating_rating >= 4) badges.push({ name: "Healthy Routine Builder", desc: "Exercised and ate well on the same day." });
+
+      // 3-day streak: look back at the last 3 calendar days (including today).
+      const threeDaysAgo = new Date(); threeDaysAgo.setDate(threeDaysAgo.getDate() - 2);
+      const isoStart = threeDaysAgo.toISOString().slice(0, 10);
+      const { data: recent } = await supabase
+        .from("daily_checkins").select("date")
+        .eq("user_id", userId).gte("date", isoStart);
+      const distinct = new Set((recent ?? []).map((r: any) => r.date));
+      if (distinct.size >= 3) badges.push({ name: "3-Day Streak", desc: "Three consecutive daily check-ins." });
+
       for (const b of badges) {
         await supabase.from("achievements").upsert(
           { user_id: userId, badge_name: b.name, badge_description: b.desc },
-          { onConflict: "user_id,badge_name" }
+          { onConflict: "user_id,badge_name" },
         );
       }
     },
@@ -69,10 +79,11 @@ function CheckinPage() {
       qc.invalidateQueries({ queryKey: ["checkin"] });
       qc.invalidateQueries({ queryKey: ["dash-checkins"] });
       qc.invalidateQueries({ queryKey: ["dash-badges"] });
-      toast.success("Check-in saved.");
+      qc.invalidateQueries({ queryKey: ["all-badges"] });
+      toast.success(existing.data ? "Check-in updated." : "Check-in saved.");
       setReflection(generateReflection(form));
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.message ?? "Could not save check-in."),
   });
 
   return (
@@ -110,8 +121,13 @@ function CheckinPage() {
             <Label>Tomorrow's most important task</Label>
             <Input value={form.tomorrow_main_task ?? ""} onChange={(e) => setForm({ ...form, tomorrow_main_task: e.target.value })} />
           </div>
-          <Button className="w-full" onClick={() => save.mutate()}>
-            {existing.data ? "Update check-in" : "Save check-in"}
+          {existing.data && (
+            <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+              You already checked in today. Edits will update today's entry — no duplicate is created.
+            </p>
+          )}
+          <Button className="w-full" onClick={() => save.mutate()} disabled={save.isPending}>
+            {save.isPending ? "Saving…" : existing.data ? "Update check-in" : "Save check-in"}
           </Button>
         </CardContent>
       </Card>

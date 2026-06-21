@@ -55,9 +55,10 @@ function RecoveryPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["recovery"] });
       qc.invalidateQueries({ queryKey: ["dash-badges"] });
+      qc.invalidateQueries({ queryKey: ["all-badges"] });
       toast.success("Recovery plan saved.");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.message ?? "Could not save recovery plan."),
   });
 
   return (
@@ -84,8 +85,8 @@ function RecoveryPage() {
           <div><Label>What is the smallest useful next action?</Label>
             <Input value={form.smallest_next_action} onChange={(e) => setForm({ ...form, smallest_next_action: e.target.value })} placeholder="e.g., open the textbook to page 142" />
           </div>
-          <Button className="w-full" disabled={!form.missed_task} onClick={() => save.mutate()}>
-            <RefreshCw className="mr-2 h-4 w-4" /> Generate recovery plan
+          <Button className="w-full" disabled={!form.missed_task || save.isPending} onClick={() => save.mutate()}>
+            <RefreshCw className="mr-2 h-4 w-4" /> {save.isPending ? "Saving…" : "Generate recovery plan"}
           </Button>
         </CardContent>
       </Card>

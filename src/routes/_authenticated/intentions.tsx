@@ -37,12 +37,20 @@ function IntentionsPage() {
     mutationFn: async () => {
       const { error } = await supabase.from("implementation_intentions").insert({ ...form, user_id: userId });
       if (error) throw error;
+      if (form.obstacle && form.backup_plan) {
+        await supabase.from("achievements").upsert(
+          { user_id: userId, badge_name: "Obstacle Solver", badge_description: "Created an if-then plan with a backup." },
+          { onConflict: "user_id,badge_name" },
+        );
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["intentions"] });
+      qc.invalidateQueries({ queryKey: ["all-badges"] });
       setForm({ if_context: "", then_action: "", duration: "", obstacle: "", backup_plan: "" });
       toast.success("Intention saved.");
     },
+    onError: (e: any) => toast.error(e.message ?? "Could not save intention."),
   });
 
   const preview = `If it is ${form.if_context || "[time/context]"}, then I will ${form.then_action || "[specific action]"} for ${form.duration || "[duration]"}. If ${form.obstacle || "[obstacle]"} happens, then I will ${form.backup_plan || "[backup plan]"}.`;
@@ -71,8 +79,8 @@ function IntentionsPage() {
           <div><Label>Backup plan</Label>
             <Input value={form.backup_plan} onChange={(e) => setForm({ ...form, backup_plan: e.target.value })} placeholder="put phone in another room" />
           </div>
-          <Button className="w-full" disabled={!form.if_context || !form.then_action} onClick={() => save.mutate()}>
-            <Zap className="mr-2 h-4 w-4" /> Save intention
+          <Button className="w-full" disabled={!form.if_context || !form.then_action || save.isPending} onClick={() => save.mutate()}>
+            <Zap className="mr-2 h-4 w-4" /> {save.isPending ? "Saving…" : "Save intention"}
           </Button>
         </CardContent></Card>
 
@@ -82,9 +90,11 @@ function IntentionsPage() {
         </CardContent></Card>
       </div>
 
-      {list.data && list.data.length > 0 && (
-        <div className="mt-10">
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Your intentions</h3>
+      <div className="mt-10">
+        <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Your intentions</h3>
+        {list.isPending ? (
+          <Card><CardContent className="p-6 text-sm text-muted-foreground">Loading…</CardContent></Card>
+        ) : list.data && list.data.length > 0 ? (
           <div className="space-y-2">
             {list.data.map((i) => (
               <Card key={i.id}><CardContent className="p-4 text-sm">
@@ -93,8 +103,10 @@ function IntentionsPage() {
               </CardContent></Card>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <Card><CardContent className="p-6 text-sm text-muted-foreground">No intentions yet. Build your first if-then plan above.</CardContent></Card>
+        )}
+      </div>
     </PageContainer>
   );
 }
