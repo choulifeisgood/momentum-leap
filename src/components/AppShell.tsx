@@ -13,6 +13,7 @@ import {
   LogOut,
   Sparkles,
   Menu,
+  MessageCircle,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
@@ -30,6 +31,7 @@ const nav = [
   { to: "/intentions", label: "If-Then Builder", icon: Zap },
   { to: "/breakdown", label: "AI Breakdown", icon: Brain },
   { to: "/achievements", label: "Achievements", icon: Award },
+  { to: "/feedback", label: "Beta Feedback", icon: MessageCircle },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 

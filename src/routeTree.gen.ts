@@ -18,6 +18,7 @@ import { Route as AuthenticatedRecoveryRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedProgressRouteImport } from './routes/_authenticated/progress'
 import { Route as AuthenticatedIntentionsRouteImport } from './routes/_authenticated/intentions'
 import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated/goals'
+import { Route as AuthenticatedFeedbackRouteImport } from './routes/_authenticated/feedback'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCheckinRouteImport } from './routes/_authenticated/checkin'
 import { Route as AuthenticatedBreakdownRouteImport } from './routes/_authenticated/breakdown'
@@ -67,6 +68,11 @@ const AuthenticatedGoalsRoute = AuthenticatedGoalsRouteImport.update({
   path: '/goals',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedFeedbackRoute = AuthenticatedFeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/breakdown': typeof AuthenticatedBreakdownRoute
   '/checkin': typeof AuthenticatedCheckinRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/feedback': typeof AuthenticatedFeedbackRoute
   '/goals': typeof AuthenticatedGoalsRoute
   '/intentions': typeof AuthenticatedIntentionsRoute
   '/progress': typeof AuthenticatedProgressRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/breakdown': typeof AuthenticatedBreakdownRoute
   '/checkin': typeof AuthenticatedCheckinRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/feedback': typeof AuthenticatedFeedbackRoute
   '/goals': typeof AuthenticatedGoalsRoute
   '/intentions': typeof AuthenticatedIntentionsRoute
   '/progress': typeof AuthenticatedProgressRoute
@@ -126,6 +134,7 @@ export interface FileRoutesById {
   '/_authenticated/breakdown': typeof AuthenticatedBreakdownRoute
   '/_authenticated/checkin': typeof AuthenticatedCheckinRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/feedback': typeof AuthenticatedFeedbackRoute
   '/_authenticated/goals': typeof AuthenticatedGoalsRoute
   '/_authenticated/intentions': typeof AuthenticatedIntentionsRoute
   '/_authenticated/progress': typeof AuthenticatedProgressRoute
@@ -142,6 +151,7 @@ export interface FileRouteTypes {
     | '/breakdown'
     | '/checkin'
     | '/dashboard'
+    | '/feedback'
     | '/goals'
     | '/intentions'
     | '/progress'
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/breakdown'
     | '/checkin'
     | '/dashboard'
+    | '/feedback'
     | '/goals'
     | '/intentions'
     | '/progress'
@@ -171,6 +182,7 @@ export interface FileRouteTypes {
     | '/_authenticated/breakdown'
     | '/_authenticated/checkin'
     | '/_authenticated/dashboard'
+    | '/_authenticated/feedback'
     | '/_authenticated/goals'
     | '/_authenticated/intentions'
     | '/_authenticated/progress'
@@ -250,6 +262,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedGoalsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/feedback': {
+      id: '/_authenticated/feedback'
+      path: '/feedback'
+      fullPath: '/feedback'
+      preLoaderRoute: typeof AuthenticatedFeedbackRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -286,6 +305,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBreakdownRoute: typeof AuthenticatedBreakdownRoute
   AuthenticatedCheckinRoute: typeof AuthenticatedCheckinRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedFeedbackRoute: typeof AuthenticatedFeedbackRoute
   AuthenticatedGoalsRoute: typeof AuthenticatedGoalsRoute
   AuthenticatedIntentionsRoute: typeof AuthenticatedIntentionsRoute
   AuthenticatedProgressRoute: typeof AuthenticatedProgressRoute
@@ -299,6 +319,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBreakdownRoute: AuthenticatedBreakdownRoute,
   AuthenticatedCheckinRoute: AuthenticatedCheckinRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedFeedbackRoute: AuthenticatedFeedbackRoute,
   AuthenticatedGoalsRoute: AuthenticatedGoalsRoute,
   AuthenticatedIntentionsRoute: AuthenticatedIntentionsRoute,
   AuthenticatedProgressRoute: AuthenticatedProgressRoute,

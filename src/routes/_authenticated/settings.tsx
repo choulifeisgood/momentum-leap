@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +21,7 @@ function SettingsPage() {
   const { user, signOut } = useAuth();
   const userId = user!.id;
   const qc = useQueryClient();
-  const navigate = useNavigate();
+  
   const [display_name, setName] = useState("");
   const [student_type, setType] = useState("High school");
 
@@ -72,7 +72,9 @@ function SettingsPage() {
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={() => save.mutate()}>Save</Button>
+        <Button onClick={() => save.mutate()} disabled={save.isPending}>
+          {save.isPending ? "Saving…" : "Save"}
+        </Button>
       </CardContent></Card>
 
       <Card className="mt-6"><CardContent className="space-y-3 p-6">
@@ -80,13 +82,13 @@ function SettingsPage() {
         <p className="text-sm text-muted-foreground">
           Your check-ins, goals, tasks, intentions, recovery plans, and achievements are private to your account. Other users cannot see your data.
         </p>
-        <p className="text-sm text-muted-foreground">
-          This product is for productivity and wellness habit support. It is not medical advice, therapy, or diagnosis.
+        <p className="rounded-md border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+          This product supports productivity, self-control, and wellness habits. It is not medical advice, therapy, or diagnosis.
         </p>
       </CardContent></Card>
 
       <Card className="mt-6"><CardContent className="p-6">
-        <Button variant="outline" onClick={async () => { await signOut(); navigate({ to: "/" }); }}>
+        <Button variant="outline" onClick={() => signOut()}>
           <LogOut className="mr-2 h-4 w-4" /> Sign out
         </Button>
       </CardContent></Card>
