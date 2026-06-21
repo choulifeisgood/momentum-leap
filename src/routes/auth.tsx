@@ -39,6 +39,14 @@ function AuthPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!email || !password) {
+      toast.error("Email and password are required.");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters.");
+      return;
+    }
     setSubmitting(true);
     try {
       if (isSignup) {
@@ -57,6 +65,7 @@ function AuthPage() {
         if (error) throw error;
         toast.success("Welcome back.");
       }
+      // Auth state listener will flip user; redirect happens in the effect above.
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Authentication failed");
     } finally {
