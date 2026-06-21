@@ -38,6 +38,39 @@ export type Database = {
         }
         Relationships: []
       }
+      beta_feedback: {
+        Row: {
+          bug_report: string | null
+          confusing: string | null
+          created_at: string
+          id: string
+          rating: number | null
+          return_reason: string | null
+          useful: string | null
+          user_id: string
+        }
+        Insert: {
+          bug_report?: string | null
+          confusing?: string | null
+          created_at?: string
+          id?: string
+          rating?: number | null
+          return_reason?: string | null
+          useful?: string | null
+          user_id: string
+        }
+        Update: {
+          bug_report?: string | null
+          confusing?: string | null
+          created_at?: string
+          id?: string
+          rating?: number | null
+          return_reason?: string | null
+          useful?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_checkins: {
         Row: {
           biggest_obstacle: string | null
