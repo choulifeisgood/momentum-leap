@@ -64,16 +64,24 @@ function TasksPage() {
         await supabase.from("implementation_intentions").insert({
           ...intention, user_id: userId, task_id: data.id,
         });
+        if (intention.obstacle && intention.backup_plan) {
+          await supabase.from("achievements").upsert(
+            { user_id: userId, badge_name: "Obstacle Solver", badge_description: "Created an if-then plan with a backup." },
+            { onConflict: "user_id,badge_name" },
+          );
+        }
       }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["dash-tasks"] });
       qc.invalidateQueries({ queryKey: ["dash-week-tasks"] });
+      qc.invalidateQueries({ queryKey: ["all-badges"] });
+      qc.invalidateQueries({ queryKey: ["dash-badges"] });
       setOpen(false);
-      toast.success("Task added with implementation intention.");
+      toast.success("Task saved.");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.message ?? "Could not save task."),
   });
 
   const setStatus = useMutation({
@@ -87,6 +95,7 @@ function TasksPage() {
       qc.invalidateQueries({ queryKey: ["dash-tasks"] });
       qc.invalidateQueries({ queryKey: ["dash-week-tasks"] });
     },
+    onError: (e: any) => toast.error(e.message ?? "Could not update task."),
   });
 
   const del = useMutation({
@@ -95,6 +104,7 @@ function TasksPage() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks"] }),
+    onError: (e: any) => toast.error(e.message ?? "Could not delete task."),
   });
 
   return (
@@ -110,11 +120,18 @@ function TasksPage() {
         }
       />
 
-      {tasks.data && tasks.data.length > 0 ? (
+      {tasks.isPending ? (
+        <Card><CardContent className="p-12 text-center text-sm text-muted-foreground">Loading today's tasks…</CardContent></Card>
+      ) : tasks.isError ? (
+        <Card><CardContent className="p-12 text-center">
+          <p className="text-sm text-destructive">Could not load tasks. Check your connection and try again.</p>
+          <Button variant="outline" size="sm" className="mt-3" onClick={() => tasks.refetch()}>Retry</Button>
+        </CardContent></Card>
+      ) : tasks.data && tasks.data.length > 0 ? (
         <div className="space-y-2">
           {tasks.data.map((t) => (
             <Card key={t.id}>
-              <CardContent className="flex items-center gap-4 p-4">
+              <CardContent className="flex flex-wrap items-center gap-3 p-4 sm:gap-4">
                 <Checkbox
                   checked={t.status === "Completed"}
                   onCheckedChange={(v) => setStatus.mutate({ id: t.id, status: v ? "Completed" : "Not started" })}
@@ -139,7 +156,7 @@ function TasksPage() {
         </div>
       ) : (
         <Card><CardContent className="p-12 text-center text-muted-foreground">
-          No tasks for today yet.
+          No tasks yet. Add one task to start today's execution plan.
         </CardContent></Card>
       )}
     </PageContainer>
