@@ -34,7 +34,7 @@ function CoachPage() {
   const { recording, busy, startRecording, stopRecording, submitText } = useVoiceCoach({
     getHistory: () => messages.map((m) => ({ role: m.role, content: m.content })).slice(-12),
     onTranscript: (t) => setMessages((prev) => [...prev, { role: "user", content: t }]),
-    onReply: (reply) => {}, // handled by wrapper below
+    onResult: (r) => setMessages((prev) => [...prev, { role: "assistant", content: r.reply, actions: r.actions }]),
     autoNavigate: false,
   });
 
