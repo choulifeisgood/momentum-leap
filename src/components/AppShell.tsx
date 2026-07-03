@@ -14,7 +14,9 @@ import {
   Sparkles,
   Menu,
   MessageCircle,
+  Mic,
 } from "lucide-react";
+import { CoachMic } from "@/components/CoachMic";
 import { useState, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { BRAND } from "@/lib/brand";
