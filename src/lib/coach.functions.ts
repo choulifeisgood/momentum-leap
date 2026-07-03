@@ -257,7 +257,7 @@ async function execTool(
 
     case "list_weekly_goals": {
       const status = (args.status as string) ?? "active";
-      let q = sb.from("weekly_goals").select("id,title,why,status,target_date").eq("user_id", uid);
+      let q = sb.from("weekly_goals").select("id,title,why_it_matters,status,target_date,priority,category").eq("user_id", uid);
       if (status !== "all") q = q.eq("status", status);
       const { data } = await q;
       return { result: data ?? [], summary: `Loaded ${data?.length ?? 0} goals.` };
@@ -273,7 +273,7 @@ async function execTool(
       const { data, error } = await sb.from("weekly_goals").insert({
         user_id: uid,
         title: String(args.title),
-        why: (args.why as string) ?? null,
+        why_it_matters: (args.why as string) ?? null,
         target_date: (args.target_date as string) ?? null,
         status: "active",
       }).select().single();
@@ -282,8 +282,10 @@ async function execTool(
     }
 
     case "update_weekly_goal_status": {
+      const patch: Record<string, unknown> = { status: args.status };
+      if (args.status === "completed") patch.completed_at = new Date().toISOString();
       const { data, error } = await sb.from("weekly_goals")
-        .update({ status: args.status }).eq("id", args.goal_id).eq("user_id", uid).select().single();
+        .update(patch).eq("id", args.goal_id).eq("user_id", uid).select().single();
       if (error) throw error;
       return { result: data, summary: `Goal marked ${args.status}.` };
     }
@@ -303,8 +305,10 @@ async function execTool(
     }
 
     case "update_task_status": {
+      const patch: Record<string, unknown> = { status: args.status };
+      if (args.status === "Done") patch.completed_at = new Date().toISOString();
       const { data, error } = await sb.from("daily_tasks")
-        .update({ status: args.status }).eq("id", args.task_id).eq("user_id", uid).select().single();
+        .update(patch).eq("id", args.task_id).eq("user_id", uid).select().single();
       if (error) throw error;
       return { result: data, summary: `Task marked ${args.status}.` };
     }
@@ -313,7 +317,7 @@ async function execTool(
       const { data, error } = await sb.from("implementation_intentions").insert({
         user_id: uid,
         task_id: args.task_id,
-        if_situation: args.if_situation,
+        if_context: args.if_situation,
         then_action: args.then_action,
       }).select().single();
       if (error) throw error;
@@ -324,30 +328,34 @@ async function execTool(
       const payload: Record<string, unknown> = {
         user_id: uid,
         date: today,
-        sleep_hours: args.sleep_hours ?? null,
-        exercise_minutes: args.exercise_minutes ?? null,
-        energy: args.energy ?? null,
-        focus: args.focus ?? null,
-        mood: args.mood ?? null,
-        reflection: args.reflection ?? null,
       };
-      const { data, error } = await sb.from("daily_checkins").upsert(payload, { onConflict: "user_id,date" }).select().single();
+      const allowed = [
+        "sleep_hours", "exercise_today", "deep_work_minutes",
+        "energy_level", "focus_level", "stress_level",
+        "healthy_eating_rating", "main_task_completed",
+        "main_win", "biggest_obstacle", "tomorrow_main_task",
+      ];
+      for (const k of allowed) if (args[k] !== undefined) payload[k] = args[k];
+      const { data, error } = await sb.from("daily_checkins")
+        .upsert(payload, { onConflict: "user_id,date" }).select().single();
       if (error) throw error;
       return { result: data, summary: `Today's check-in logged.`, navigate_to: "/dashboard" };
     }
 
     case "start_recovery_plan": {
-      const steps = [
-        "Take 5 slow breaths. Nothing to fix yet.",
-        "Pick the ONE most important task for today.",
-        "Do a 15-minute version of it right now.",
-        "Log a check-in tonight, no matter how the day went.",
-      ];
+      const missed = String(args.missed_task ?? "today's plan");
+      const plan_text = [
+        "1. Pause. Take 5 slow breaths — no self-judgment.",
+        `2. Reduce "${missed}" to the smallest possible next step.`,
+        "3. Do that step for 10 minutes right now.",
+        "4. Log a check-in tonight to close the loop.",
+      ].join("\n");
       const { data, error } = await sb.from("recovery_plans").insert({
         user_id: uid,
-        reason: args.reason,
-        steps,
-        status: "active",
+        missed_task: missed,
+        reason: (args.reason as string) ?? null,
+        smallest_next_action: (args.smallest_next_action as string) ?? null,
+        recovery_plan_text: plan_text,
       }).select().single();
       if (error) throw error;
       return { result: data, summary: `Recovery plan created.`, navigate_to: "/recovery" };
