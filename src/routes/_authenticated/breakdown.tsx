@@ -1,30 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { PageContainer, PageHeader } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Brain, Plus } from "lucide-react";
+import { Brain, Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { generateBreakdown, type Breakdown } from "@/lib/breakdown.functions";
 
 export const Route = createFileRoute("/_authenticated/breakdown")({
   head: () => ({ meta: [{ title: "AI Task Breakdown" }] }),
   component: BreakdownPage,
 });
-
-interface Breakdown {
-  first_step: string;
-  focus_block: string;
-  subtask: string;
-  checkpoint: string;
-  obstacle: string;
-  backup: string;
-  unfinished: string;
-}
 
 function BreakdownPage() {
   const { user } = useAuth();
@@ -32,11 +24,13 @@ function BreakdownPage() {
   const qc = useQueryClient();
   const [goal, setGoal] = useState("");
   const [result, setResult] = useState<Breakdown | null>(null);
+  const runBreakdown = useServerFn(generateBreakdown);
 
-  function generate() {
-    if (!goal.trim()) return;
-    setResult(buildBreakdown(goal));
-  }
+  const generate = useMutation({
+    mutationFn: async () => runBreakdown({ data: { goal: goal.trim() } }),
+    onSuccess: (r) => setResult(r),
+    onError: (e: any) => toast.error(e?.message ?? "Failed to generate breakdown"),
+  });
 
   const addToPlan = useMutation({
     mutationFn: async () => {
