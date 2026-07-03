@@ -42,7 +42,7 @@ export function useVoiceCoach(opts: Options = {}) {
         const result = await coach({ data: { history, user_message: clean } });
         opts.onReply?.(result.reply);
         opts.onActions?.(result.actions);
-        // Invalidate everything data-dependent
+        opts.onResult?.(result);
         qc.invalidateQueries();
         const nav = result.actions.reverse().find((a) => a.ok && a.navigate_to)?.navigate_to;
         if (nav && opts.autoNavigate !== false) {
