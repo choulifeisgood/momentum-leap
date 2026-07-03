@@ -91,7 +91,7 @@ function BreakdownPage() {
       )}
 
       <p className="mt-4 text-xs text-muted-foreground">
-        Rule-based for now. Connects to OpenAI/Claude/Gemini in a future release without changing this UI.
+        Powered by OpenAI. Plans are suggestions — adapt them to your context.
       </p>
     </PageContainer>
   );
