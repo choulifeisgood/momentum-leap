@@ -419,29 +419,27 @@ export const runCoachTurn = createServerFn({ method: "POST" })
 
       const toolCalls = msg.tool_calls ?? [];
       if (toolCalls.length === 0) {
-        // No more tools — return final assistant text
         return {
           reply: (msg.content ?? "").trim() || "Done.",
           actions,
-          messages,
         };
       }
 
-      // Execute each tool call
       for (const call of toolCalls) {
         const name = call.function.name;
+        const argsRaw = call.function.arguments || "{}";
         let parsedArgs: Record<string, unknown> = {};
-        try { parsedArgs = JSON.parse(call.function.arguments || "{}"); } catch { /* ignore */ }
+        try { parsedArgs = JSON.parse(argsRaw); } catch { /* ignore */ }
         try {
           const exec = await execTool(name, parsedArgs, ctx);
-          actions.push({ tool: name, args: parsedArgs, ok: true, summary: exec.summary, navigate_to: exec.navigate_to });
+          actions.push({ tool: name, args_json: argsRaw, ok: true, summary: exec.summary, navigate_to: exec.navigate_to });
           messages.push({
             role: "tool",
             tool_call_id: call.id,
             content: JSON.stringify(exec.result).slice(0, 4000),
           });
         } catch (e: any) {
-          actions.push({ tool: name, args: parsedArgs, ok: false, summary: e?.message ?? "Tool failed" });
+          actions.push({ tool: name, args_json: argsRaw, ok: false, summary: e?.message ?? "Tool failed" });
           messages.push({
             role: "tool",
             tool_call_id: call.id,
@@ -451,7 +449,7 @@ export const runCoachTurn = createServerFn({ method: "POST" })
       }
     }
 
-    return { reply: "I did several steps but need you to check the results.", actions, messages };
+    return { reply: "I did several steps but need you to check the results.", actions };
   });
 
 // ============================================================================
