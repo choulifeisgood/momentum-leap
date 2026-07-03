@@ -3,13 +3,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { transcribeAudio, runCoachTurn, type ExecutedAction } from "@/lib/coach.functions";
+import { transcribeAudio, runCoachTurn, type ExecutedAction, type CoachTurnResult } from "@/lib/coach.functions";
 
 type Options = {
   onTranscript?: (text: string) => void;
+  onResult?: (result: CoachTurnResult) => void;
   onActions?: (actions: ExecutedAction[]) => void;
   onReply?: (reply: string) => void;
-  // If provided, chat history is included so the coach has context.
   getHistory?: () => Array<{ role: "user" | "assistant"; content: string }>;
   autoNavigate?: boolean;
 };

@@ -20,6 +20,7 @@ import { Route as AuthenticatedIntentionsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated/goals'
 import { Route as AuthenticatedFeedbackRouteImport } from './routes/_authenticated/feedback'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedCoachRouteImport } from './routes/_authenticated/coach'
 import { Route as AuthenticatedCheckinRouteImport } from './routes/_authenticated/checkin'
 import { Route as AuthenticatedBreakdownRouteImport } from './routes/_authenticated/breakdown'
 import { Route as AuthenticatedAchievementsRouteImport } from './routes/_authenticated/achievements'
@@ -78,6 +79,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCoachRoute = AuthenticatedCoachRouteImport.update({
+  id: '/coach',
+  path: '/coach',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCheckinRoute = AuthenticatedCheckinRouteImport.update({
   id: '/checkin',
   path: '/checkin',
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/achievements': typeof AuthenticatedAchievementsRoute
   '/breakdown': typeof AuthenticatedBreakdownRoute
   '/checkin': typeof AuthenticatedCheckinRoute
+  '/coach': typeof AuthenticatedCoachRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/feedback': typeof AuthenticatedFeedbackRoute
   '/goals': typeof AuthenticatedGoalsRoute
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/achievements': typeof AuthenticatedAchievementsRoute
   '/breakdown': typeof AuthenticatedBreakdownRoute
   '/checkin': typeof AuthenticatedCheckinRoute
+  '/coach': typeof AuthenticatedCoachRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/feedback': typeof AuthenticatedFeedbackRoute
   '/goals': typeof AuthenticatedGoalsRoute
@@ -133,6 +141,7 @@ export interface FileRoutesById {
   '/_authenticated/achievements': typeof AuthenticatedAchievementsRoute
   '/_authenticated/breakdown': typeof AuthenticatedBreakdownRoute
   '/_authenticated/checkin': typeof AuthenticatedCheckinRoute
+  '/_authenticated/coach': typeof AuthenticatedCoachRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/feedback': typeof AuthenticatedFeedbackRoute
   '/_authenticated/goals': typeof AuthenticatedGoalsRoute
@@ -150,6 +159,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/breakdown'
     | '/checkin'
+    | '/coach'
     | '/dashboard'
     | '/feedback'
     | '/goals'
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/breakdown'
     | '/checkin'
+    | '/coach'
     | '/dashboard'
     | '/feedback'
     | '/goals'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/_authenticated/achievements'
     | '/_authenticated/breakdown'
     | '/_authenticated/checkin'
+    | '/_authenticated/coach'
     | '/_authenticated/dashboard'
     | '/_authenticated/feedback'
     | '/_authenticated/goals'
@@ -276,6 +288,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/coach': {
+      id: '/_authenticated/coach'
+      path: '/coach'
+      fullPath: '/coach'
+      preLoaderRoute: typeof AuthenticatedCoachRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/checkin': {
       id: '/_authenticated/checkin'
       path: '/checkin'
@@ -304,6 +323,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAchievementsRoute: typeof AuthenticatedAchievementsRoute
   AuthenticatedBreakdownRoute: typeof AuthenticatedBreakdownRoute
   AuthenticatedCheckinRoute: typeof AuthenticatedCheckinRoute
+  AuthenticatedCoachRoute: typeof AuthenticatedCoachRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFeedbackRoute: typeof AuthenticatedFeedbackRoute
   AuthenticatedGoalsRoute: typeof AuthenticatedGoalsRoute
@@ -318,6 +338,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAchievementsRoute: AuthenticatedAchievementsRoute,
   AuthenticatedBreakdownRoute: AuthenticatedBreakdownRoute,
   AuthenticatedCheckinRoute: AuthenticatedCheckinRoute,
+  AuthenticatedCoachRoute: AuthenticatedCoachRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFeedbackRoute: AuthenticatedFeedbackRoute,
   AuthenticatedGoalsRoute: AuthenticatedGoalsRoute,
