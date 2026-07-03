@@ -106,15 +106,3 @@ function Section({ label, text }: { label: string; text: string }) {
   );
 }
 
-function buildBreakdown(g: string): Breakdown {
-  const t = g.trim();
-  return {
-    first_step: `Open the materials needed for "${t}" and read the first instruction or page.`,
-    focus_block: `Set a 25-min timer. Work only on "${t}" with phone in another room.`,
-    subtask: `Identify one concrete output to finish in this block (one paragraph, one problem set, one page).`,
-    checkpoint: `After 25 min, take a 5-min break and ask: did I produce the output? What's the next 25-min target?`,
-    obstacle: `Most likely interruption: phone, social apps, or feeling stuck.`,
-    backup: `If distracted: turn on Do Not Disturb. If stuck: shrink the next step to something you can definitely do in 2 minutes.`,
-    unfinished: `Write down exactly where you stopped and the next sentence/step. Schedule the next block tomorrow.`,
-  };
-}
