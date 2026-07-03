@@ -20,7 +20,7 @@ export type ChatMsg = {
 
 export type ExecutedAction = {
   tool: string;
-  args: Record<string, unknown>;
+  args_json: string;
   ok: boolean;
   summary: string;
   navigate_to?: string;
@@ -29,7 +29,6 @@ export type ExecutedAction = {
 export type CoachTurnResult = {
   reply: string;
   actions: ExecutedAction[];
-  messages: ChatMsg[];
 };
 
 // ============================================================================
