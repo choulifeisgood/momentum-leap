@@ -69,8 +69,9 @@ function BreakdownPage() {
           value={goal}
           onChange={(e) => setGoal(e.target.value)}
         />
-        <Button onClick={generate} disabled={!goal.trim()}>
-          <Brain className="mr-2 h-4 w-4" /> Break it down
+        <Button onClick={() => generate.mutate()} disabled={!goal.trim() || generate.isPending}>
+          {generate.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Brain className="mr-2 h-4 w-4" />}
+          {generate.isPending ? "Thinking…" : "Break it down"}
         </Button>
       </CardContent></Card>
 
