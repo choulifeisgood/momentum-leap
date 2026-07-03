@@ -179,11 +179,15 @@ const TOOLS = [
     type: "function",
     function: {
       name: "start_recovery_plan",
-      description: "Generate a 4-step recovery plan when the user has fallen behind.",
+      description: "Create a recovery plan when the user has fallen behind on a task.",
       parameters: {
         type: "object",
-        properties: { reason: { type: "string" } },
-        required: ["reason"],
+        properties: {
+          missed_task: { type: "string", description: "The task or goal that was missed." },
+          reason: { type: "string", description: "Why it was missed (optional)." },
+          smallest_next_action: { type: "string", description: "The tiniest next step the user can do right now." },
+        },
+        required: ["missed_task"],
         additionalProperties: false,
       },
     },
