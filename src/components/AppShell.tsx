@@ -108,6 +108,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           onClick={() => setOpen(false)}
         />
       )}
+
+      <CoachMic />
     </div>
   );
 }
