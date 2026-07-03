@@ -47,10 +47,7 @@ function CoachPage() {
     if (!clean) return;
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: clean }]);
-    const result = await submitText(clean);
-    if (result) {
-      setMessages((prev) => [...prev, { role: "assistant", content: result.reply, actions: result.actions }]);
-    }
+    await submitText(clean); // assistant appended via onResult
   }
 
   // Voice: transcript already appended by onTranscript. We need to append assistant after.
