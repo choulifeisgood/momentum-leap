@@ -245,7 +245,7 @@ async function execTool(
   switch (name) {
     case "get_today_snapshot": {
       const [{ data: goals }, { data: tasks }, { data: checkin }] = await Promise.all([
-        sb.from("weekly_goals").select("id,title,why,status,target_date").eq("user_id", uid),
+        sb.from("weekly_goals").select("id,title,why_it_matters,status,target_date").eq("user_id", uid),
         sb.from("daily_tasks").select("id,title,status,estimated_minutes,difficulty").eq("user_id", uid).eq("task_date", today),
         sb.from("daily_checkins").select("*").eq("user_id", uid).eq("date", today).maybeSingle(),
       ]);
