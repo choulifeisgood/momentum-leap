@@ -14,7 +14,9 @@ import {
   Sparkles,
   Menu,
   MessageCircle,
+  Mic,
 } from "lucide-react";
+import { CoachMic } from "@/components/CoachMic";
 import { useState, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { BRAND } from "@/lib/brand";
@@ -24,6 +26,7 @@ import { cn } from "@/lib/utils";
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/goals", label: "Weekly Goals", icon: Target },
+  { to: "/coach", label: "AI Coach", icon: Mic },
   { to: "/tasks", label: "Today's Tasks", icon: ListTodo },
   { to: "/checkin", label: "Daily Check-In", icon: HeartPulse },
   { to: "/recovery", label: "Recovery Mode", icon: RefreshCw },
@@ -105,6 +108,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           onClick={() => setOpen(false)}
         />
       )}
+
+      <CoachMic />
     </div>
   );
 }
