@@ -14,7 +14,12 @@ import { format } from "date-fns";
 import { generateBreakdown, type Breakdown } from "@/lib/breakdown.functions";
 
 export const Route = createFileRoute("/_authenticated/breakdown")({
-  head: () => ({ meta: [{ title: "AI Task Breakdown" }] }),
+  head: () => ({ meta: [
+    { title: "AI Breakdown — Alpha Momentum" },
+    { name: "description", content: "Drop in any outcome. Get the smallest next step, 60-min focus block, and backup." },
+    { property: "og:title", content: "AI Breakdown — Alpha Momentum" },
+    { property: "og:description", content: "Turn ambiguous outcomes into a concrete first block." },
+  ] }),
   component: BreakdownPage,
 });
 
@@ -36,20 +41,19 @@ function BreakdownPage() {
     mutationFn: async () => {
       if (!result) return;
       const today = format(new Date(), "yyyy-MM-dd");
-      const { error } = await supabase.from("daily_tasks").insert({
+      const { error } = await supabase.from("tasks").insert({
         user_id: userId,
         title: result.first_step,
-        estimated_minutes: 25,
-        difficulty: "Easy",
-        task_type: "Deep Work",
+        estimated_minutes: 60,
+        energy_required: "medium",
+        task_type: "deep",
         task_date: today,
-        status: "Not started",
+        status: "pending",
       });
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tasks"] });
-      qc.invalidateQueries({ queryKey: ["dash-tasks"] });
       toast.success("Added to today's plan.");
     },
     onError: (e: any) => toast.error(e.message),
@@ -58,14 +62,13 @@ function BreakdownPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="AI Task Breakdown"
-        description="Drop in any big goal. Get the tiny first step, a 25-min plan, and a backup if you stall."
+        title="AI Breakdown"
+        description="Drop in any strategic outcome. Get the first move, a focus block, and a backup."
       />
-
       <Card><CardContent className="space-y-3 p-6">
         <Textarea
           rows={3}
-          placeholder="What goal or task are you trying to complete? e.g., 'Finish first draft of college essay'"
+          placeholder="Outcome or task you want to move. e.g., 'Ship pricing v2 by end of month'"
           value={goal}
           onChange={(e) => setGoal(e.target.value)}
         />
@@ -77,22 +80,18 @@ function BreakdownPage() {
 
       {result && (
         <Card className="mt-6"><CardContent className="space-y-4 p-6">
-          <Section label="First tiny step" text={result.first_step} />
-          <Section label="25-minute focus block" text={result.focus_block} />
-          <Section label="Specific subtask" text={result.subtask} />
+          <Section label="First move" text={result.first_step} />
+          <Section label="Focus block" text={result.focus_block} />
+          <Section label="Concrete subtask" text={result.subtask} />
           <Section label="Checkpoint" text={result.checkpoint} />
-          <Section label="Possible obstacle" text={result.obstacle} />
+          <Section label="Likely obstacle" text={result.obstacle} />
           <Section label="Backup plan" text={result.backup} />
           <Section label="If unfinished" text={result.unfinished} />
           <Button onClick={() => addToPlan.mutate()}>
-            <Plus className="mr-2 h-4 w-4" /> Add first step to today's plan
+            <Plus className="mr-2 h-4 w-4" /> Add first move to today
           </Button>
         </CardContent></Card>
       )}
-
-      <p className="mt-4 text-xs text-muted-foreground">
-        Powered by OpenAI. Plans are suggestions — adapt them to your context.
-      </p>
     </PageContainer>
   );
 }
@@ -105,4 +104,3 @@ function Section({ label, text }: { label: string; text: string }) {
     </div>
   );
 }
-

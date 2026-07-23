@@ -1,8 +1,8 @@
-// Temporary product name. Change here to rename across the app.
+// Alpha Momentum — high-performer execution OS.
 export const BRAND = {
-  name: "Project Codename",
-  short: "Codename",
-  tagline: "Turn ambitious goals into daily execution.",
+  name: "Alpha Momentum",
+  short: "Alpha Momentum",
+  tagline: "The execution OS for high performers.",
   description:
-    "An AI-powered behavior-change system that helps students plan, act, recover, and build healthier high-performance routines.",
+    "Alpha Momentum is a decision-first execution system that helps ambitious operators turn strategic outcomes into daily action, protect capacity, and recover fast when things break.",
 };

@@ -15,27 +15,32 @@ import { Plus, Trash2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/goals")({
-  head: () => ({ meta: [{ title: "Weekly Goals" }] }),
-  component: GoalsPage,
+  head: () => ({ meta: [
+    { title: "Outcomes — Alpha Momentum" },
+    { name: "description", content: "Your strategic outcomes: what has to be true, by when, and why it matters." },
+    { property: "og:title", content: "Outcomes — Alpha Momentum" },
+    { property: "og:description", content: "Track the outcomes that move your operating priorities forward." },
+  ] }),
+  component: OutcomesPage,
 });
 
-const CATEGORIES = ["School", "SAT/ACT", "Competition", "Research", "Health", "College Prep", "Personal", "Other"];
-const PRIORITIES = ["High", "Medium", "Low"];
-const STATUSES = ["Not started", "In progress", "Completed"];
+const PRIORITIES = ["critical", "important", "maintenance", "optional"] as const;
+const STATUSES = ["active", "paused", "done", "abandoned"] as const;
 
-function GoalsPage() {
+function OutcomesPage() {
   const { user } = useAuth();
   const userId = user!.id;
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
 
-  const goals = useQuery({
-    queryKey: ["goals", userId],
+  const list = useQuery({
+    queryKey: ["outcomes", userId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("weekly_goals")
+        .from("outcomes")
         .select("*")
         .eq("user_id", userId)
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
@@ -46,109 +51,109 @@ function GoalsPage() {
     mutationFn: async (g: any) => {
       const payload = { ...g, user_id: userId };
       if (g.id) {
-        const { error } = await supabase.from("weekly_goals").update(payload).eq("id", g.id);
+        const { error } = await supabase.from("outcomes").update(payload).eq("id", g.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("weekly_goals").insert(payload);
+        const { error } = await supabase.from("outcomes").insert(payload);
         if (error) throw error;
       }
-      if (g.why_it_matters && g.why_it_matters.trim().length > 0) {
-        await supabase.from("achievements").upsert(
-          { user_id: userId, badge_name: "Future Self Builder", badge_description: "Set a goal with a clear 'why it matters'." },
-          { onConflict: "user_id,badge_name" },
+      if (g.why_it_matters?.trim()) {
+        await supabase.from("milestones").upsert(
+          { user_id: userId, name: "Clarified Intent", description: "Set an outcome with a clear 'why it matters'.", category: "clarity" },
+          { onConflict: "user_id,name" },
         );
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["goals"] });
+      qc.invalidateQueries({ queryKey: ["outcomes"] });
       qc.invalidateQueries({ queryKey: ["dash-goals"] });
-      qc.invalidateQueries({ queryKey: ["all-badges"] });
       setOpen(false);
-      toast.success("Goal saved.");
+      toast.success("Outcome saved.");
     },
-    onError: (e: any) => toast.error(e.message ?? "Could not save goal."),
+    onError: (e: any) => toast.error(e.message ?? "Could not save outcome."),
   });
 
-  const del = useMutation({
+  const softDelete = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("weekly_goals").delete().eq("id", id);
+      const { error } = await supabase.from("outcomes").update({ deleted_at: new Date().toISOString() }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["goals"] }),
-    onError: (e: any) => toast.error(e.message ?? "Could not delete goal."),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["outcomes"] });
+      toast.success("Moved to trash.");
+    },
+    onError: (e: any) => toast.error(e.message),
   });
 
   const setStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const completed_at = status === "Completed" ? new Date().toISOString() : null;
-      const { error } = await supabase.from("weekly_goals").update({ status, completed_at }).eq("id", id);
+      const completed_at = status === "done" ? new Date().toISOString() : null;
+      const { error } = await supabase.from("outcomes").update({ status, completed_at }).eq("id", id);
       if (error) throw error;
-      if (status === "Completed") {
-        await supabase.from("achievements").upsert(
-          { user_id: userId, badge_name: "Weekly Finisher", badge_description: "Completed a weekly goal." },
-          { onConflict: "user_id,badge_name" },
+      if (status === "done") {
+        await supabase.from("milestones").upsert(
+          { user_id: userId, name: "Shipped an Outcome", description: "Closed out a strategic outcome.", category: "execution" },
+          { onConflict: "user_id,name" },
         );
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["goals"] });
+      qc.invalidateQueries({ queryKey: ["outcomes"] });
       qc.invalidateQueries({ queryKey: ["dash-goals"] });
-      qc.invalidateQueries({ queryKey: ["all-badges"] });
-      qc.invalidateQueries({ queryKey: ["dash-badges"] });
     },
-    onError: (e: any) => toast.error(e.message ?? "Could not update goal."),
+    onError: (e: any) => toast.error(e.message),
   });
 
   return (
     <PageContainer>
       <PageHeader
-        title="Weekly Goals"
-        description="Turn ambition into outcomes. Each goal needs a 'why' and a smallest next action."
+        title="Outcomes"
+        description="Two-level hierarchy: strategic outcomes → today's tasks. Every outcome has a metric, a deadline, and a why."
         action={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button><Plus className="mr-1 h-4 w-4" /> New goal</Button>
+              <Button><Plus className="mr-1 h-4 w-4" /> New outcome</Button>
             </DialogTrigger>
-            <GoalDialogContent onSave={(g) => upsert.mutate(g)} />
+            <OutcomeDialog onSave={(g) => upsert.mutate(g)} saving={upsert.isPending} />
           </Dialog>
         }
       />
 
-      {goals.isPending ? (
-        <Card><CardContent className="p-12 text-center text-sm text-muted-foreground">Loading your goals…</CardContent></Card>
-      ) : goals.isError ? (
+      {list.isPending ? (
+        <Card><CardContent className="p-12 text-center text-sm text-muted-foreground">Loading…</CardContent></Card>
+      ) : list.isError ? (
         <Card><CardContent className="p-12 text-center">
-          <p className="text-sm text-destructive">Could not load goals. Check your connection and try again.</p>
-          <Button variant="outline" size="sm" className="mt-3" onClick={() => goals.refetch()}>Retry</Button>
+          <p className="text-sm text-destructive">Could not load outcomes.</p>
+          <Button variant="outline" size="sm" className="mt-3" onClick={() => list.refetch()}>Retry</Button>
         </CardContent></Card>
-      ) : goals.data && goals.data.length > 0 ? (
+      ) : list.data && list.data.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2">
-          {goals.data.map((g) => (
+          {list.data.map((g: any) => (
             <Card key={g.id}>
               <CardContent className="p-5">
                 <div className="mb-2 flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] uppercase tracking-wider text-accent-foreground">{g.category}</span>
                   <span className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider ${
-                    g.priority === "High" ? "bg-destructive/10 text-destructive" :
-                    g.priority === "Medium" ? "bg-warning/15 text-warning-foreground" :
+                    g.priority === "critical" ? "bg-destructive/10 text-destructive" :
+                    g.priority === "important" ? "bg-warning/15 text-warning-foreground" :
                     "bg-muted text-muted-foreground"
                   }`}>{g.priority}</span>
-                  {g.target_date && <span className="text-xs text-muted-foreground">by {g.target_date}</span>}
+                  {g.deadline && <span className="text-xs text-muted-foreground">by {g.deadline}</span>}
                 </div>
                 <h3 className="text-lg font-semibold">{g.title}</h3>
-                {g.why_it_matters && <p className="mt-2 text-sm text-muted-foreground"><span className="font-medium text-foreground">Why:</span> {g.why_it_matters}</p>}
-                {g.smallest_next_action && <p className="mt-1 text-sm text-muted-foreground"><span className="font-medium text-foreground">Next:</span> {g.smallest_next_action}</p>}
+                {g.success_metric && <p className="mt-2 text-sm text-muted-foreground"><span className="font-medium text-foreground">Success metric:</span> {g.success_metric}</p>}
+                {g.why_it_matters && <p className="mt-1 text-sm text-muted-foreground"><span className="font-medium text-foreground">Why:</span> {g.why_it_matters}</p>}
+                {g.constraints && <p className="mt-1 text-sm text-muted-foreground"><span className="font-medium text-foreground">Constraints:</span> {g.constraints}</p>}
                 <div className="mt-4 flex flex-wrap items-center gap-2">
                   <Select value={g.status} onValueChange={(v) => setStatus.mutate({ id: g.id, status: v })}>
-                    <SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-8 w-[130px] text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                   </Select>
-                  {g.status !== "Completed" && (
-                    <Button variant="ghost" size="sm" onClick={() => setStatus.mutate({ id: g.id, status: "Completed" })}>
-                      <CheckCircle2 className="mr-1 h-4 w-4" /> Complete
+                  {g.status !== "done" && (
+                    <Button variant="ghost" size="sm" onClick={() => setStatus.mutate({ id: g.id, status: "done" })}>
+                      <CheckCircle2 className="mr-1 h-4 w-4" /> Ship
                     </Button>
                   )}
-                  <Button variant="ghost" size="icon" className="ml-auto" onClick={() => del.mutate(g.id)}>
+                  <Button variant="ghost" size="icon" className="ml-auto" onClick={() => softDelete.mutate(g.id)}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
@@ -158,46 +163,40 @@ function GoalsPage() {
         </div>
       ) : (
         <Card><CardContent className="p-12 text-center">
-          <p className="text-muted-foreground">No goals yet. Create your first weekly goal.</p>
+          <p className="text-muted-foreground">No outcomes yet. Define what has to be true in the next 4–12 weeks.</p>
         </CardContent></Card>
       )}
     </PageContainer>
   );
 }
 
-function GoalDialogContent({ onSave }: { onSave: (g: any) => void }) {
+function OutcomeDialog({ onSave, saving }: { onSave: (g: any) => void; saving: boolean }) {
   const [form, setForm] = useState({
-    title: "", category: "School", priority: "Medium",
-    target_date: "", why_it_matters: "", smallest_next_action: "", status: "Not started",
+    title: "", priority: "important", status: "active",
+    success_metric: "", why_it_matters: "", deadline: "", constraints: "", non_goals: "",
   });
   return (
-    <DialogContent className="max-w-lg">
-      <DialogHeader><DialogTitle>New weekly goal</DialogTitle></DialogHeader>
+    <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogHeader><DialogTitle>New outcome</DialogTitle></DialogHeader>
       <div className="space-y-3">
-        <div><Label>Goal title</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g., Finish AP Bio Unit 3" /></div>
+        <div><Label>Title</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g., Close $250K in new pipeline by Q3" /></div>
         <div className="grid grid-cols-2 gap-3">
-          <div><Label>Category</Label>
-            <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
           <div><Label>Priority</Label>
             <Select value={form.priority} onValueChange={(v) => setForm({ ...form, priority: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{PRIORITIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
             </Select>
           </div>
+          <div><Label>Deadline</Label><Input type="date" value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })} /></div>
         </div>
-        <div><Label>Target date</Label><Input type="date" value={form.target_date} onChange={(e) => setForm({ ...form, target_date: e.target.value })} /></div>
-        <div><Label>Why does this goal matter to your future self?</Label>
-          <Textarea value={form.why_it_matters} onChange={(e) => setForm({ ...form, why_it_matters: e.target.value })} placeholder="The deeper reason this matters…" rows={3} />
+        <div><Label>Success metric</Label><Input value={form.success_metric} onChange={(e) => setForm({ ...form, success_metric: e.target.value })} placeholder="What proves it's done?" /></div>
+        <div><Label>Why it matters</Label>
+          <Textarea rows={2} value={form.why_it_matters} onChange={(e) => setForm({ ...form, why_it_matters: e.target.value })} placeholder="Strategic reason — what breaks if you don't do this?" />
         </div>
-        <div><Label>Smallest next action</Label>
-          <Input value={form.smallest_next_action} onChange={(e) => setForm({ ...form, smallest_next_action: e.target.value })} placeholder="The tiniest first step you could take today" />
-        </div>
-        <Button className="w-full" disabled={!form.title} onClick={() => onSave({ ...form, target_date: form.target_date || null })}>
-          Save goal
+        <div><Label>Constraints</Label><Input value={form.constraints} onChange={(e) => setForm({ ...form, constraints: e.target.value })} placeholder="Budget, headcount, timeline, dependencies…" /></div>
+        <div><Label>Non-goals</Label><Input value={form.non_goals} onChange={(e) => setForm({ ...form, non_goals: e.target.value })} placeholder="What you're explicitly NOT doing here." /></div>
+        <Button className="w-full" disabled={!form.title || saving} onClick={() => onSave({ ...form, deadline: form.deadline || null })}>
+          {saving ? "Saving…" : "Save outcome"}
         </Button>
       </div>
     </DialogContent>

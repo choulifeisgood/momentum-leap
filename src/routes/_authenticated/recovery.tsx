@@ -13,7 +13,12 @@ import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/recovery")({
-  head: () => ({ meta: [{ title: "Recovery Mode" }] }),
+  head: () => ({ meta: [
+    { title: "Recovery — Alpha Momentum" },
+    { name: "description", content: "Fell behind or hit a shock? Build a professional recovery plan in under 2 minutes." },
+    { property: "og:title", content: "Recovery — Alpha Momentum" },
+    { property: "og:description", content: "Contain the damage, protect the critical outcome, restart." },
+  ] }),
   component: RecoveryPage,
 });
 
@@ -22,8 +27,8 @@ function RecoveryPage() {
   const userId = user!.id;
   const qc = useQueryClient();
   const [form, setForm] = useState({
-    missed_task: "", reason: "", available_time: "",
-    most_important_to_save: "", smallest_next_action: "",
+    trigger: "", what_changed: "", remaining_capacity: "",
+    must_save: "", defer_list: "", smallest_action: "",
   });
   const [plan, setPlan] = useState<string | null>(null);
 
@@ -32,7 +37,7 @@ function RecoveryPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("recovery_plans").select("*")
-        .eq("user_id", userId)
+        .eq("user_id", userId).is("deleted_at", null)
         .order("created_at", { ascending: false }).limit(5);
       return data ?? [];
     },
@@ -42,50 +47,49 @@ function RecoveryPage() {
     mutationFn: async () => {
       const generated = buildPlan(form);
       const { error } = await supabase.from("recovery_plans").insert({
-        ...form, user_id: userId, recovery_plan_text: generated,
+        ...form, user_id: userId, plan_text: generated,
       });
       if (error) throw error;
-      // Award badge
-      await supabase.from("achievements").upsert(
-        { user_id: userId, badge_name: "Recovery Win", badge_description: "Used recovery mode to restart without guilt" },
-        { onConflict: "user_id,badge_name" }
+      await supabase.from("milestones").upsert(
+        { user_id: userId, name: "Contained the Shock", description: "Used recovery mode to restart cleanly.", category: "resilience" },
+        { onConflict: "user_id,name" }
       );
       setPlan(generated);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["recovery"] });
-      qc.invalidateQueries({ queryKey: ["dash-badges"] });
-      qc.invalidateQueries({ queryKey: ["all-badges"] });
       toast.success("Recovery plan saved.");
     },
-    onError: (e: any) => toast.error(e.message ?? "Could not save recovery plan."),
+    onError: (e: any) => toast.error(e.message),
   });
 
   return (
     <PageContainer>
       <PageHeader
-        title="Fell behind? Restart without guilt."
-        description="A calm, practical plan to save the most important thing — not catch up on everything."
+        title="Recovery mode"
+        description="Reduce scope. Protect the critical outcome. Restart in 10 minutes."
       />
-
       <Card>
         <CardContent className="space-y-4 p-6">
-          <div><Label>What did you miss?</Label>
-            <Input value={form.missed_task} onChange={(e) => setForm({ ...form, missed_task: e.target.value })} placeholder="e.g., AP Bio reading + practice problems" />
+          <div><Label>What triggered this?</Label>
+            <Input value={form.trigger} onChange={(e) => setForm({ ...form, trigger: e.target.value })} placeholder="e.g., missed a critical deadline / illness / customer escalation" />
           </div>
-          <div><Label>Why did it happen? (no judgment)</Label>
-            <Textarea rows={2} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} />
+          <div><Label>What changed since the plan?</Label>
+            <Textarea rows={2} value={form.what_changed} onChange={(e) => setForm({ ...form, what_changed: e.target.value })} />
           </div>
-          <div><Label>How much time do you have now?</Label>
-            <Input value={form.available_time} onChange={(e) => setForm({ ...form, available_time: e.target.value })} placeholder="e.g., 45 minutes before bed" />
+          <div><Label>Remaining capacity today</Label>
+            <Input value={form.remaining_capacity} onChange={(e) => setForm({ ...form, remaining_capacity: e.target.value })} placeholder="e.g., 90 minutes before EOD" />
           </div>
-          <div><Label>What is the most important thing to save?</Label>
-            <Input value={form.most_important_to_save} onChange={(e) => setForm({ ...form, most_important_to_save: e.target.value })} placeholder="e.g., understand the unit concepts" />
+          <div><Label>Must save (protect at all costs)</Label>
+            <Input value={form.must_save} onChange={(e) => setForm({ ...form, must_save: e.target.value })} placeholder="The single outcome that cannot slip." />
           </div>
-          <div><Label>What is the smallest useful next action?</Label>
-            <Input value={form.smallest_next_action} onChange={(e) => setForm({ ...form, smallest_next_action: e.target.value })} placeholder="e.g., open the textbook to page 142" />
+          <div><Label>Defer / drop</Label>
+            <Textarea rows={2} value={form.defer_list} onChange={(e) => setForm({ ...form, defer_list: e.target.value })} placeholder="Everything you'll intentionally push." />
           </div>
-          <Button className="w-full" disabled={!form.missed_task || save.isPending} onClick={() => save.mutate()}>
+          <div><Label>Smallest next action (do now)</Label>
+            <Input value={form.smallest_action} onChange={(e) => setForm({ ...form, smallest_action: e.target.value })} placeholder="The 10-minute step that starts recovery." />
+          </div>
+          <Button className="w-full" disabled={!form.trigger || save.isPending} onClick={() => save.mutate()}>
             <RefreshCw className="mr-2 h-4 w-4" /> {save.isPending ? "Saving…" : "Generate recovery plan"}
           </Button>
         </CardContent>
@@ -104,9 +108,9 @@ function RecoveryPage() {
         <div className="mt-10">
           <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Recent recoveries</h3>
           <div className="space-y-2">
-            {history.data.map((r) => (
+            {history.data.map((r: any) => (
               <Card key={r.id}><CardContent className="p-4">
-                <div className="text-sm font-medium">{r.missed_task}</div>
+                <div className="text-sm font-medium">{r.trigger || "Recovery"}</div>
                 <div className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</div>
               </CardContent></Card>
             ))}
@@ -118,17 +122,19 @@ function RecoveryPage() {
 }
 
 function buildPlan(f: any) {
-  return `Step 1 — Stabilize (2 min)
-Take three slow breaths. You are not behind, you are restarting. ${f.reason ? `What happened ("${f.reason.slice(0, 80)}") is information, not a verdict.` : ""}
+  return `1. Contain (2 min)
+Name the trigger without judgment: ${f.trigger || "the disruption"}. ${f.what_changed ? `What changed: ${f.what_changed}.` : ""}
 
-Step 2 — Smallest useful action (do now)
-${f.smallest_next_action || "Open the task and read the first instruction."}
-Set a 10-minute timer. Just start — momentum is the goal.
+2. Protect the critical outcome
+With ${f.remaining_capacity || "your remaining time"}, defend only: ${f.must_save || f.trigger}.
 
-Step 3 — Protect the most important thing
-With your ${f.available_time || "remaining time"}, focus only on: ${f.most_important_to_save || f.missed_task}.
-Skip the rest. You can reschedule unfinished work tomorrow.
+3. Defer everything else
+Explicitly drop or push: ${f.defer_list || "everything not on the must-save line"}.
 
-Step 4 — Next checkpoint
-After this session, do a 1-line check-in: what did I save? Tomorrow's main task gets the first slot.`;
+4. Restart in 10 minutes
+Do this now: ${f.smallest_action || "the smallest step that unblocks the critical outcome"}.
+Timer: 10 minutes. Momentum, not perfection.
+
+5. Debrief tonight
+Log a check-in. One line: what you saved, what you dropped, what to change tomorrow.`;
 }
