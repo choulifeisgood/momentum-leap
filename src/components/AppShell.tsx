@@ -15,8 +15,11 @@ import {
   Menu,
   MessageCircle,
   Mic,
+  Trash2,
 } from "lucide-react";
 import { CoachMic } from "@/components/CoachMic";
+import { CommandPalette } from "@/components/CommandPalette";
+import { CheckInModal } from "@/components/CheckInModal";
 import { useState, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { BRAND } from "@/lib/brand";
@@ -35,6 +38,7 @@ const nav = [
   { to: "/breakdown", label: "AI Breakdown", icon: Brain },
   { to: "/achievements", label: "Milestones", icon: Award },
   { to: "/feedback", label: "Beta Feedback", icon: MessageCircle },
+  { to: "/trash", label: "Trash", icon: Trash2 },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
@@ -91,11 +95,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur md:hidden">
-          <Button variant="ghost" size="icon" onClick={() => setOpen(!open)}>
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur">
+          <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setOpen(!open)}>
             <Menu className="h-5 w-5" />
           </Button>
-          <span className="font-semibold">{BRAND.short}</span>
+          <span className="font-semibold md:hidden">{BRAND.short}</span>
+          <div className="ml-auto"><CommandPalette /></div>
         </header>
         <main className="min-w-0 flex-1">{children}</main>
       </div>
@@ -108,6 +113,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
 
       <CoachMic />
+      <CheckInModal />
     </div>
   );
 }
