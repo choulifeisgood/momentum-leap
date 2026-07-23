@@ -14,31 +14,91 @@ export type Database = {
   }
   public: {
     Tables: {
-      achievements: {
+      agent_actions: {
         Row: {
-          badge_description: string | null
-          badge_name: string
+          created_at: string
           id: string
-          unlocked_at: string
+          payload: Json | null
+          reversed_at: string | null
+          summary: string | null
+          tool: string
+          undo_payload: Json | null
           user_id: string
         }
         Insert: {
-          badge_description?: string | null
-          badge_name: string
+          created_at?: string
           id?: string
-          unlocked_at?: string
+          payload?: Json | null
+          reversed_at?: string | null
+          summary?: string | null
+          tool: string
+          undo_payload?: Json | null
           user_id: string
         }
         Update: {
-          badge_description?: string | null
-          badge_name?: string
+          created_at?: string
           id?: string
-          unlocked_at?: string
+          payload?: Json | null
+          reversed_at?: string | null
+          summary?: string | null
+          tool?: string
+          undo_payload?: Json | null
           user_id?: string
         }
         Relationships: []
       }
-      beta_feedback: {
+      checkins: {
+        Row: {
+          available_capacity: number | null
+          created_at: string
+          date: string
+          energy: number | null
+          id: string
+          main_commitment: string | null
+          obstacle: string | null
+          raw_voice: string | null
+          sleep_hours: number | null
+          sleep_quality: number | null
+          stress: number | null
+          unexpected_event: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          available_capacity?: number | null
+          created_at?: string
+          date?: string
+          energy?: number | null
+          id?: string
+          main_commitment?: string | null
+          obstacle?: string | null
+          raw_voice?: string | null
+          sleep_hours?: number | null
+          sleep_quality?: number | null
+          stress?: number | null
+          unexpected_event?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          available_capacity?: number | null
+          created_at?: string
+          date?: string
+          energy?: number | null
+          id?: string
+          main_commitment?: string | null
+          obstacle?: string | null
+          raw_voice?: string | null
+          sleep_hours?: number | null
+          sleep_quality?: number | null
+          stress?: number | null
+          unexpected_event?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      feedback: {
         Row: {
           bug_report: string | null
           confusing: string | null
@@ -71,153 +131,138 @@ export type Database = {
         }
         Relationships: []
       }
-      daily_checkins: {
-        Row: {
-          biggest_obstacle: string | null
-          created_at: string
-          date: string
-          deep_work_minutes: number | null
-          energy_level: number | null
-          exercise_today: boolean | null
-          focus_level: number | null
-          healthy_eating_rating: number | null
-          id: string
-          main_task_completed: boolean | null
-          main_win: string | null
-          sleep_hours: number | null
-          stress_level: number | null
-          tomorrow_main_task: string | null
-          user_id: string
-        }
-        Insert: {
-          biggest_obstacle?: string | null
-          created_at?: string
-          date?: string
-          deep_work_minutes?: number | null
-          energy_level?: number | null
-          exercise_today?: boolean | null
-          focus_level?: number | null
-          healthy_eating_rating?: number | null
-          id?: string
-          main_task_completed?: boolean | null
-          main_win?: string | null
-          sleep_hours?: number | null
-          stress_level?: number | null
-          tomorrow_main_task?: string | null
-          user_id: string
-        }
-        Update: {
-          biggest_obstacle?: string | null
-          created_at?: string
-          date?: string
-          deep_work_minutes?: number | null
-          energy_level?: number | null
-          exercise_today?: boolean | null
-          focus_level?: number | null
-          healthy_eating_rating?: number | null
-          id?: string
-          main_task_completed?: boolean | null
-          main_win?: string | null
-          sleep_hours?: number | null
-          stress_level?: number | null
-          tomorrow_main_task?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      daily_tasks: {
-        Row: {
-          completed_at: string | null
-          created_at: string
-          difficulty: string | null
-          estimated_minutes: number | null
-          id: string
-          planned_time: string | null
-          status: string
-          task_date: string
-          task_type: string | null
-          title: string
-          user_id: string
-          weekly_goal_id: string | null
-        }
-        Insert: {
-          completed_at?: string | null
-          created_at?: string
-          difficulty?: string | null
-          estimated_minutes?: number | null
-          id?: string
-          planned_time?: string | null
-          status?: string
-          task_date?: string
-          task_type?: string | null
-          title: string
-          user_id: string
-          weekly_goal_id?: string | null
-        }
-        Update: {
-          completed_at?: string | null
-          created_at?: string
-          difficulty?: string | null
-          estimated_minutes?: number | null
-          id?: string
-          planned_time?: string | null
-          status?: string
-          task_date?: string
-          task_type?: string | null
-          title?: string
-          user_id?: string
-          weekly_goal_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "daily_tasks_weekly_goal_id_fkey"
-            columns: ["weekly_goal_id"]
-            isOneToOne: false
-            referencedRelation: "weekly_goals"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      implementation_intentions: {
+      intentions: {
         Row: {
           backup_plan: string | null
           created_at: string
-          duration: string | null
+          deleted_at: string | null
           id: string
           if_context: string
           obstacle: string | null
           task_id: string | null
           then_action: string
+          updated_at: string
           user_id: string
         }
         Insert: {
           backup_plan?: string | null
           created_at?: string
-          duration?: string | null
+          deleted_at?: string | null
           id?: string
           if_context: string
           obstacle?: string | null
           task_id?: string | null
           then_action: string
+          updated_at?: string
           user_id: string
         }
         Update: {
           backup_plan?: string | null
           created_at?: string
-          duration?: string | null
+          deleted_at?: string | null
           id?: string
           if_context?: string
           obstacle?: string | null
           task_id?: string | null
           then_action?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "implementation_intentions_task_id_fkey"
+            foreignKeyName: "intentions_task_id_fkey"
             columns: ["task_id"]
             isOneToOne: false
-            referencedRelation: "daily_tasks"
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      milestones: {
+        Row: {
+          category: string | null
+          description: string | null
+          id: string
+          name: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      outcomes: {
+        Row: {
+          completed_at: string | null
+          constraints: string | null
+          created_at: string
+          deadline: string | null
+          deleted_at: string | null
+          id: string
+          non_goals: string | null
+          priority: string
+          status: string
+          strategic_area_id: string | null
+          success_metric: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          why_it_matters: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          constraints?: string | null
+          created_at?: string
+          deadline?: string | null
+          deleted_at?: string | null
+          id?: string
+          non_goals?: string | null
+          priority?: string
+          status?: string
+          strategic_area_id?: string | null
+          success_metric?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          why_it_matters?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          constraints?: string | null
+          created_at?: string
+          deadline?: string | null
+          deleted_at?: string | null
+          id?: string
+          non_goals?: string | null
+          priority?: string
+          status?: string
+          strategic_area_id?: string | null
+          success_metric?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          why_it_matters?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outcomes_strategic_area_id_fkey"
+            columns: ["strategic_area_id"]
+            isOneToOne: false
+            referencedRelation: "strategic_areas"
             referencedColumns: ["id"]
           },
         ]
@@ -226,109 +271,192 @@ export type Database = {
         Row: {
           created_at: string
           display_name: string | null
+          health_priorities: string[] | null
           id: string
-          preferred_categories: string[] | null
-          student_type: string | null
+          onboarded_at: string | null
+          preferred_focus_windows: Json | null
+          profession: string | null
+          role: string | null
+          timezone: string | null
+          tone: string | null
+          top_objectives: string | null
           updated_at: string
           user_id: string
+          work_style: string | null
+          working_hours: Json | null
         }
         Insert: {
           created_at?: string
           display_name?: string | null
+          health_priorities?: string[] | null
           id?: string
-          preferred_categories?: string[] | null
-          student_type?: string | null
+          onboarded_at?: string | null
+          preferred_focus_windows?: Json | null
+          profession?: string | null
+          role?: string | null
+          timezone?: string | null
+          tone?: string | null
+          top_objectives?: string | null
           updated_at?: string
           user_id: string
+          work_style?: string | null
+          working_hours?: Json | null
         }
         Update: {
           created_at?: string
           display_name?: string | null
+          health_priorities?: string[] | null
           id?: string
-          preferred_categories?: string[] | null
-          student_type?: string | null
+          onboarded_at?: string | null
+          preferred_focus_windows?: Json | null
+          profession?: string | null
+          role?: string | null
+          timezone?: string | null
+          tone?: string | null
+          top_objectives?: string | null
           updated_at?: string
           user_id?: string
+          work_style?: string | null
+          working_hours?: Json | null
         }
         Relationships: []
       }
       recovery_plans: {
         Row: {
-          available_time: string | null
           created_at: string
+          defer_list: string | null
+          deleted_at: string | null
           id: string
-          missed_task: string
-          most_important_to_save: string | null
-          reason: string | null
-          recovery_plan_text: string | null
-          smallest_next_action: string | null
+          must_save: string | null
+          plan_text: string | null
+          remaining_capacity: string | null
+          smallest_action: string | null
+          trigger: string | null
+          updated_at: string
+          user_id: string
+          what_changed: string | null
+        }
+        Insert: {
+          created_at?: string
+          defer_list?: string | null
+          deleted_at?: string | null
+          id?: string
+          must_save?: string | null
+          plan_text?: string | null
+          remaining_capacity?: string | null
+          smallest_action?: string | null
+          trigger?: string | null
+          updated_at?: string
+          user_id: string
+          what_changed?: string | null
+        }
+        Update: {
+          created_at?: string
+          defer_list?: string | null
+          deleted_at?: string | null
+          id?: string
+          must_save?: string | null
+          plan_text?: string | null
+          remaining_capacity?: string | null
+          smallest_action?: string | null
+          trigger?: string | null
+          updated_at?: string
+          user_id?: string
+          what_changed?: string | null
+        }
+        Relationships: []
+      }
+      strategic_areas: {
+        Row: {
+          color: string | null
+          created_at: string
+          deleted_at: string | null
+          id: string
+          name: string
+          updated_at: string
           user_id: string
         }
         Insert: {
-          available_time?: string | null
+          color?: string | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
-          missed_task: string
-          most_important_to_save?: string | null
-          reason?: string | null
-          recovery_plan_text?: string | null
-          smallest_next_action?: string | null
+          name: string
+          updated_at?: string
           user_id: string
         }
         Update: {
-          available_time?: string | null
+          color?: string | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
-          missed_task?: string
-          most_important_to_save?: string | null
-          reason?: string | null
-          recovery_plan_text?: string | null
-          smallest_next_action?: string | null
+          name?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
       }
-      weekly_goals: {
+      tasks: {
         Row: {
-          category: string
+          actual_minutes: number | null
           completed_at: string | null
           created_at: string
+          deleted_at: string | null
+          energy_required: string | null
+          estimated_minutes: number | null
           id: string
-          priority: string
-          smallest_next_action: string | null
+          outcome_id: string | null
+          planned_time: string | null
           status: string
-          target_date: string | null
+          task_date: string | null
+          task_type: string | null
           title: string
+          updated_at: string
           user_id: string
-          why_it_matters: string | null
         }
         Insert: {
-          category?: string
+          actual_minutes?: number | null
           completed_at?: string | null
           created_at?: string
+          deleted_at?: string | null
+          energy_required?: string | null
+          estimated_minutes?: number | null
           id?: string
-          priority?: string
-          smallest_next_action?: string | null
+          outcome_id?: string | null
+          planned_time?: string | null
           status?: string
-          target_date?: string | null
+          task_date?: string | null
+          task_type?: string | null
           title: string
+          updated_at?: string
           user_id: string
-          why_it_matters?: string | null
         }
         Update: {
-          category?: string
+          actual_minutes?: number | null
           completed_at?: string | null
           created_at?: string
+          deleted_at?: string | null
+          energy_required?: string | null
+          estimated_minutes?: number | null
           id?: string
-          priority?: string
-          smallest_next_action?: string | null
+          outcome_id?: string | null
+          planned_time?: string | null
           status?: string
-          target_date?: string | null
+          task_date?: string | null
+          task_type?: string | null
           title?: string
+          updated_at?: string
           user_id?: string
-          why_it_matters?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_outcome_id_fkey"
+            columns: ["outcome_id"]
+            isOneToOne: false
+            referencedRelation: "outcomes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

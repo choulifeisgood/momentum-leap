@@ -32,7 +32,7 @@ export type CoachTurnResult = {
 };
 
 // ============================================================================
-// Tool schemas (OpenAI function-calling format)
+// Tool schemas (OpenAI function-calling format) — Alpha Momentum schema
 // ============================================================================
 
 const TOOLS = [
@@ -40,19 +40,19 @@ const TOOLS = [
     type: "function",
     function: {
       name: "get_today_snapshot",
-      description: "Get today's summary: date, active goals, today's tasks, latest check-in, streak.",
+      description: "Get today's summary: date, active outcomes, today's tasks, latest check-in.",
       parameters: { type: "object", properties: {}, additionalProperties: false },
     },
   },
   {
     type: "function",
     function: {
-      name: "list_weekly_goals",
-      description: "List the user's weekly goals.",
+      name: "list_outcomes",
+      description: "List the user's strategic outcomes.",
       parameters: {
         type: "object",
         properties: {
-          status: { type: "string", enum: ["active", "completed", "all"], description: "Filter by status. Default active." },
+          status: { type: "string", enum: ["active", "paused", "done", "abandoned", "all"], description: "Default active." },
         },
         additionalProperties: false,
       },
@@ -62,21 +62,23 @@ const TOOLS = [
     type: "function",
     function: {
       name: "list_today_tasks",
-      description: "List tasks scheduled for today.",
+      description: "List tasks for today.",
       parameters: { type: "object", properties: {}, additionalProperties: false },
     },
   },
   {
     type: "function",
     function: {
-      name: "create_weekly_goal",
-      description: "Create a new weekly goal. Prefer including a 'why' — it drives motivation.",
+      name: "create_outcome",
+      description: "Create a new strategic outcome.",
       parameters: {
         type: "object",
         properties: {
-          title: { type: "string", description: "Concrete outcome. e.g., 'Finish chemistry chapters 4-6'." },
-          why: { type: "string", description: "The identity/motivation behind it." },
-          target_date: { type: "string", description: "YYYY-MM-DD. Defaults to end of this week." },
+          title: { type: "string" },
+          why_it_matters: { type: "string" },
+          success_metric: { type: "string" },
+          deadline: { type: "string", description: "YYYY-MM-DD" },
+          priority: { type: "string", enum: ["critical", "important", "maintenance", "optional"] },
         },
         required: ["title"],
         additionalProperties: false,
@@ -86,15 +88,15 @@ const TOOLS = [
   {
     type: "function",
     function: {
-      name: "update_weekly_goal_status",
-      description: "Mark a weekly goal as active or completed.",
+      name: "update_outcome_status",
+      description: "Change an outcome's status.",
       parameters: {
         type: "object",
         properties: {
-          goal_id: { type: "string" },
-          status: { type: "string", enum: ["active", "completed"] },
+          outcome_id: { type: "string" },
+          status: { type: "string", enum: ["active", "paused", "done", "abandoned"] },
         },
-        required: ["goal_id", "status"],
+        required: ["outcome_id", "status"],
         additionalProperties: false,
       },
     },
@@ -108,10 +110,11 @@ const TOOLS = [
         type: "object",
         properties: {
           title: { type: "string" },
-          estimated_minutes: { type: "number", description: "Default 25." },
-          difficulty: { type: "string", enum: ["Easy", "Medium", "Hard"] },
-          task_type: { type: "string", enum: ["Deep Work", "Shallow", "Exercise", "Study", "Admin", "Other"] },
+          estimated_minutes: { type: "number", description: "Default 60." },
+          energy_required: { type: "string", enum: ["low", "medium", "high"] },
+          task_type: { type: "string", enum: ["deep", "shallow", "admin", "decision", "research", "waiting"] },
           task_date: { type: "string", description: "YYYY-MM-DD. Default today." },
+          outcome_id: { type: "string", description: "Optional parent outcome id." },
         },
         required: ["title"],
         additionalProperties: false,
@@ -127,7 +130,7 @@ const TOOLS = [
         type: "object",
         properties: {
           task_id: { type: "string" },
-          status: { type: "string", enum: ["Not started", "In progress", "Done"] },
+          status: { type: "string", enum: ["pending", "in_progress", "done", "deferred"] },
         },
         required: ["task_id", "status"],
         additionalProperties: false,
@@ -137,16 +140,18 @@ const TOOLS = [
   {
     type: "function",
     function: {
-      name: "create_implementation_intention",
-      description: "Attach an if-then plan to a task. e.g. 'If it's 7pm, then I open my chem textbook.'",
+      name: "create_intention",
+      description: "Attach an if-then plan to a task.",
       parameters: {
         type: "object",
         properties: {
           task_id: { type: "string" },
-          if_situation: { type: "string" },
+          if_context: { type: "string" },
           then_action: { type: "string" },
+          obstacle: { type: "string" },
+          backup_plan: { type: "string" },
         },
-        required: ["task_id", "if_situation", "then_action"],
+        required: ["if_context", "then_action"],
         additionalProperties: false,
       },
     },
@@ -155,21 +160,18 @@ const TOOLS = [
     type: "function",
     function: {
       name: "log_checkin",
-      description: "Log or update today's daily check-in. Upserts today's entry.",
+      description: "Log or update today's check-in.",
       parameters: {
         type: "object",
         properties: {
-          sleep_hours: { type: "number", description: "0-14" },
-          exercise_today: { type: "boolean", description: "Did user exercise today?" },
-          deep_work_minutes: { type: "number", description: "Focused deep-work minutes today." },
-          energy_level: { type: "number", description: "1-5" },
-          focus_level: { type: "number", description: "1-5" },
-          stress_level: { type: "number", description: "1-5" },
-          healthy_eating_rating: { type: "number", description: "1-5" },
-          main_task_completed: { type: "boolean" },
-          main_win: { type: "string", description: "Biggest win of the day." },
-          biggest_obstacle: { type: "string" },
-          tomorrow_main_task: { type: "string" },
+          energy: { type: "number", description: "1-10" },
+          stress: { type: "number", description: "1-10" },
+          sleep_hours: { type: "number" },
+          sleep_quality: { type: "number", description: "1-10" },
+          available_capacity: { type: "number", description: "0-100 (%)" },
+          main_commitment: { type: "string" },
+          obstacle: { type: "string" },
+          unexpected_event: { type: "string" },
         },
         additionalProperties: false,
       },
@@ -178,16 +180,17 @@ const TOOLS = [
   {
     type: "function",
     function: {
-      name: "start_recovery_plan",
-      description: "Create a recovery plan when the user has fallen behind on a task.",
+      name: "start_recovery",
+      description: "Create a recovery plan.",
       parameters: {
         type: "object",
         properties: {
-          missed_task: { type: "string", description: "The task or goal that was missed." },
-          reason: { type: "string", description: "Why it was missed (optional)." },
-          smallest_next_action: { type: "string", description: "The tiniest next step the user can do right now." },
+          trigger: { type: "string" },
+          what_changed: { type: "string" },
+          must_save: { type: "string" },
+          smallest_action: { type: "string" },
         },
-        required: ["missed_task"],
+        required: ["trigger"],
         additionalProperties: false,
       },
     },
@@ -196,7 +199,7 @@ const TOOLS = [
     type: "function",
     function: {
       name: "navigate",
-      description: "Move the user to a page after completing an action.",
+      description: "Move the user to a page.",
       parameters: {
         type: "object",
         properties: {
@@ -212,20 +215,19 @@ const TOOLS = [
   },
 ] as const;
 
-const SYSTEM_PROMPT = `You are Momentum, an execution coach inside a student productivity app grounded in behavioral psychology (implementation intentions, tiny habits, identity-based habits).
+const SYSTEM_PROMPT = `You are the Alpha Momentum coach — a decision-first execution coach for high performers (founders, executives, operators).
 
-You have TOOLS to read and modify the user's real data (goals, tasks, check-ins, recovery). Act on voice/text commands directly — the user has approved auto-execution.
+You have TOOLS to read and modify the user's real data (outcomes, tasks, check-ins, intentions, recovery). Act on voice/text commands directly — the user has approved auto-execution.
 
-Rules:
-- Be concise and warm. 1-3 sentences per reply. No lists unless the user asked.
-- Prefer ACTION over discussion. If the user says "add a task X", call create_task immediately. If they describe their day, call log_checkin.
-- Use get_today_snapshot at the start of a new topic to ground yourself in real data. Do NOT invent goals/tasks that don't exist.
-- After write actions, briefly confirm what you did in plain language.
-- If a required field is missing and it's not reasonable to default, ask ONE short clarifying question.
-- Default task_date to today. Default estimated_minutes to 25, difficulty to "Medium", task_type to "Study" when unspecified.
-- For check-ins: infer energy/focus/mood as 1-5 from tone if the user gives descriptors ("great" ~ 5, "meh" ~ 2). Ask only if genuinely ambiguous.
-- Use navigate() only when it clearly helps (e.g., after logging a check-in, navigate to /dashboard).
-- Never fabricate IDs. To modify a specific goal/task, first call list_weekly_goals or list_today_tasks.`;
+Style:
+- Direct, executive, calm. Zero hype. 1-3 sentences per reply. No lists unless explicitly asked.
+- Prefer ACTION over commentary. If the user says "add a task", call create_task immediately.
+- Use get_today_snapshot at the start of a new topic to ground yourself in real data.
+- After write actions, confirm briefly in plain language.
+- Ask ONE short clarifying question only when a required field is genuinely ambiguous.
+- Defaults: task_date = today; estimated_minutes = 60; energy_required = "medium"; task_type = "deep".
+- For check-ins: infer 1-10 from tone ("great" ~ 8, "wrecked" ~ 3).
+- Never fabricate IDs. To modify a specific outcome/task, first list_outcomes or list_today_tasks.`;
 
 // ============================================================================
 // Tool executors
@@ -244,61 +246,66 @@ async function execTool(
 
   switch (name) {
     case "get_today_snapshot": {
-      const [{ data: goals }, { data: tasks }, { data: checkin }] = await Promise.all([
-        sb.from("weekly_goals").select("id,title,why_it_matters,status,target_date").eq("user_id", uid),
-        sb.from("daily_tasks").select("id,title,status,estimated_minutes,difficulty").eq("user_id", uid).eq("task_date", today),
-        sb.from("daily_checkins").select("*").eq("user_id", uid).eq("date", today).maybeSingle(),
+      const [{ data: outcomes }, { data: tasks }, { data: checkin }] = await Promise.all([
+        sb.from("outcomes").select("id,title,why_it_matters,status,deadline,priority").eq("user_id", uid).is("deleted_at", null).eq("status", "active"),
+        sb.from("tasks").select("id,title,status,estimated_minutes,energy_required,task_type").eq("user_id", uid).is("deleted_at", null).eq("task_date", today),
+        sb.from("checkins").select("*").eq("user_id", uid).eq("date", today).maybeSingle(),
       ]);
       return {
-        result: { today, goals: goals ?? [], today_tasks: tasks ?? [], today_checkin: checkin ?? null },
-        summary: `Snapshot: ${goals?.length ?? 0} goals, ${tasks?.length ?? 0} tasks, check-in ${checkin ? "logged" : "missing"}.`,
+        result: { today, outcomes: outcomes ?? [], today_tasks: tasks ?? [], today_checkin: checkin ?? null },
+        summary: `Snapshot: ${outcomes?.length ?? 0} outcomes, ${tasks?.length ?? 0} tasks, check-in ${checkin ? "logged" : "missing"}.`,
       };
     }
 
-    case "list_weekly_goals": {
+    case "list_outcomes": {
       const status = (args.status as string) ?? "active";
-      let q = sb.from("weekly_goals").select("id,title,why_it_matters,status,target_date,priority,category").eq("user_id", uid);
+      let q = sb.from("outcomes").select("id,title,why_it_matters,status,deadline,priority,success_metric")
+        .eq("user_id", uid).is("deleted_at", null);
       if (status !== "all") q = q.eq("status", status);
       const { data } = await q;
-      return { result: data ?? [], summary: `Loaded ${data?.length ?? 0} goals.` };
+      return { result: data ?? [], summary: `Loaded ${data?.length ?? 0} outcomes.` };
     }
 
     case "list_today_tasks": {
-      const { data } = await sb.from("daily_tasks").select("id,title,status,estimated_minutes,difficulty,task_type")
-        .eq("user_id", uid).eq("task_date", today);
+      const { data } = await sb.from("tasks")
+        .select("id,title,status,estimated_minutes,energy_required,task_type")
+        .eq("user_id", uid).is("deleted_at", null).eq("task_date", today);
       return { result: data ?? [], summary: `Loaded ${data?.length ?? 0} tasks for today.` };
     }
 
-    case "create_weekly_goal": {
-      const { data, error } = await sb.from("weekly_goals").insert({
+    case "create_outcome": {
+      const { data, error } = await sb.from("outcomes").insert({
         user_id: uid,
         title: String(args.title),
-        why_it_matters: (args.why as string) ?? null,
-        target_date: (args.target_date as string) ?? null,
+        why_it_matters: (args.why_it_matters as string) ?? null,
+        success_metric: (args.success_metric as string) ?? null,
+        deadline: (args.deadline as string) ?? null,
+        priority: (args.priority as string) ?? "important",
         status: "active",
       }).select().single();
       if (error) throw error;
-      return { result: data, summary: `Created goal "${data.title}".`, navigate_to: "/goals" };
+      return { result: data, summary: `Created outcome "${data.title}".`, navigate_to: "/goals" };
     }
 
-    case "update_weekly_goal_status": {
+    case "update_outcome_status": {
       const patch: Record<string, unknown> = { status: args.status };
-      if (args.status === "completed") patch.completed_at = new Date().toISOString();
-      const { data, error } = await sb.from("weekly_goals")
-        .update(patch).eq("id", args.goal_id).eq("user_id", uid).select().single();
+      if (args.status === "done") patch.completed_at = new Date().toISOString();
+      const { data, error } = await sb.from("outcomes")
+        .update(patch).eq("id", args.outcome_id).eq("user_id", uid).select().single();
       if (error) throw error;
-      return { result: data, summary: `Goal marked ${args.status}.` };
+      return { result: data, summary: `Outcome marked ${args.status}.` };
     }
 
     case "create_task": {
-      const { data, error } = await sb.from("daily_tasks").insert({
+      const { data, error } = await sb.from("tasks").insert({
         user_id: uid,
         title: String(args.title),
-        estimated_minutes: (args.estimated_minutes as number) ?? 25,
-        difficulty: (args.difficulty as string) ?? "Medium",
-        task_type: (args.task_type as string) ?? "Study",
+        estimated_minutes: (args.estimated_minutes as number) ?? 60,
+        energy_required: (args.energy_required as string) ?? "medium",
+        task_type: (args.task_type as string) ?? "deep",
         task_date: (args.task_date as string) ?? today,
-        status: "Not started",
+        outcome_id: (args.outcome_id as string) ?? null,
+        status: "pending",
       }).select().single();
       if (error) throw error;
       return { result: data, summary: `Added task "${data.title}".`, navigate_to: "/tasks" };
@@ -306,56 +313,51 @@ async function execTool(
 
     case "update_task_status": {
       const patch: Record<string, unknown> = { status: args.status };
-      if (args.status === "Done") patch.completed_at = new Date().toISOString();
-      const { data, error } = await sb.from("daily_tasks")
+      if (args.status === "done") patch.completed_at = new Date().toISOString();
+      const { data, error } = await sb.from("tasks")
         .update(patch).eq("id", args.task_id).eq("user_id", uid).select().single();
       if (error) throw error;
       return { result: data, summary: `Task marked ${args.status}.` };
     }
 
-    case "create_implementation_intention": {
-      const { data, error } = await sb.from("implementation_intentions").insert({
+    case "create_intention": {
+      const { data, error } = await sb.from("intentions").insert({
         user_id: uid,
-        task_id: args.task_id,
-        if_context: args.if_situation,
+        task_id: (args.task_id as string) ?? null,
+        if_context: args.if_context,
         then_action: args.then_action,
+        obstacle: (args.obstacle as string) ?? null,
+        backup_plan: (args.backup_plan as string) ?? null,
       }).select().single();
       if (error) throw error;
       return { result: data, summary: `If-then plan attached.` };
     }
 
     case "log_checkin": {
-      const payload: Record<string, unknown> = {
-        user_id: uid,
-        date: today,
-      };
-      const allowed = [
-        "sleep_hours", "exercise_today", "deep_work_minutes",
-        "energy_level", "focus_level", "stress_level",
-        "healthy_eating_rating", "main_task_completed",
-        "main_win", "biggest_obstacle", "tomorrow_main_task",
-      ];
+      const payload: Record<string, unknown> = { user_id: uid, date: today };
+      const allowed = ["energy", "stress", "sleep_hours", "sleep_quality", "available_capacity",
+        "main_commitment", "obstacle", "unexpected_event"];
       for (const k of allowed) if (args[k] !== undefined) payload[k] = args[k];
-      const { data, error } = await sb.from("daily_checkins")
+      const { data, error } = await sb.from("checkins")
         .upsert(payload, { onConflict: "user_id,date" }).select().single();
       if (error) throw error;
       return { result: data, summary: `Today's check-in logged.`, navigate_to: "/dashboard" };
     }
 
-    case "start_recovery_plan": {
-      const missed = String(args.missed_task ?? "today's plan");
+    case "start_recovery": {
+      const trigger = String(args.trigger ?? "recovery");
       const plan_text = [
-        "1. Pause. Take 5 slow breaths — no self-judgment.",
-        `2. Reduce "${missed}" to the smallest possible next step.`,
-        "3. Do that step for 10 minutes right now.",
-        "4. Log a check-in tonight to close the loop.",
+        `1. Contain: name the trigger — ${trigger}.`,
+        `2. Protect: ${(args.must_save as string) ?? "the critical outcome"}.`,
+        `3. Restart: ${(args.smallest_action as string) ?? "smallest 10-minute step"}.`,
       ].join("\n");
       const { data, error } = await sb.from("recovery_plans").insert({
         user_id: uid,
-        missed_task: missed,
-        reason: (args.reason as string) ?? null,
-        smallest_next_action: (args.smallest_next_action as string) ?? null,
-        recovery_plan_text: plan_text,
+        trigger,
+        what_changed: (args.what_changed as string) ?? null,
+        must_save: (args.must_save as string) ?? null,
+        smallest_action: (args.smallest_action as string) ?? null,
+        plan_text,
       }).select().single();
       if (error) throw error;
       return { result: data, summary: `Recovery plan created.`, navigate_to: "/recovery" };
@@ -390,7 +392,7 @@ async function openaiChat(body: unknown): Promise<any> {
 }
 
 // ============================================================================
-// Coach turn: text in, actions + reply out (multi-step tool loop)
+// Coach turn
 // ============================================================================
 
 const CoachInput = z.object({
@@ -414,7 +416,6 @@ export const runCoachTurn = createServerFn({ method: "POST" })
       { role: "user", content: data.user_message },
     ];
 
-    // Multi-step tool loop
     for (let step = 0; step < 6; step++) {
       const res = await openaiChat({
         model: "gpt-4o-mini",
@@ -436,10 +437,7 @@ export const runCoachTurn = createServerFn({ method: "POST" })
 
       const toolCalls = msg.tool_calls ?? [];
       if (toolCalls.length === 0) {
-        return {
-          reply: (msg.content ?? "").trim() || "Done.",
-          actions,
-        };
+        return { reply: (msg.content ?? "").trim() || "Done.", actions };
       }
 
       for (const call of toolCalls) {
@@ -466,15 +464,15 @@ export const runCoachTurn = createServerFn({ method: "POST" })
       }
     }
 
-    return { reply: "I did several steps but need you to check the results.", actions };
+    return { reply: "Done.", actions };
   });
 
 // ============================================================================
-// Transcription (OpenAI Whisper via gpt-4o-mini-transcribe)
+// Audio transcription
 // ============================================================================
 
 const TranscribeInput = z.object({
-  audio_base64: z.string().min(100),
+  audio_base64: z.string().min(10),
   mime: z.string().default("audio/webm"),
 });
 
@@ -485,21 +483,15 @@ export const transcribeAudio = createServerFn({ method: "POST" })
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
 
+    // Strip data-URL prefix if present.
     const b64 = data.audio_base64.includes(",") ? data.audio_base64.split(",")[1] : data.audio_base64;
-    const buf = Buffer.from(b64, "base64");
-    if (buf.byteLength < 1024) throw new Error("Recording too short. Please try again.");
+    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const blob = new Blob([bytes], { type: data.mime });
 
-    const mime = data.mime.split(";")[0];
-    const ext = mime === "audio/mp4" ? "mp4"
-      : mime === "audio/mpeg" ? "mp3"
-      : mime === "audio/wav" ? "wav"
-      : mime === "audio/ogg" ? "ogg"
-      : "webm";
-
+    const ext = data.mime.includes("mp4") ? "mp4" : data.mime.includes("mpeg") ? "mp3" : "webm";
     const form = new FormData();
-    const blob = new Blob([buf], { type: mime });
-    form.append("file", blob, `voice.${ext}`);
-    form.append("model", "gpt-4o-mini-transcribe");
+    form.append("file", blob, `recording.${ext}`);
+    form.append("model", "whisper-1");
 
     const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
       method: "POST",
@@ -507,9 +499,9 @@ export const transcribeAudio = createServerFn({ method: "POST" })
       body: form,
     });
     if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Transcription ${res.status}: ${text.slice(0, 300)}`);
+      const t = await res.text();
+      throw new Error(`Transcription failed ${res.status}: ${t.slice(0, 300)}`);
     }
     const json = await res.json();
-    return { text: String(json.text ?? "").trim() };
+    return { text: String(json?.text ?? "").trim() };
   });

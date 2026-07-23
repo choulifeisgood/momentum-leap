@@ -16,13 +16,18 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/tasks")({
-  head: () => ({ meta: [{ title: "Today's Tasks" }] }),
+  head: () => ({ meta: [
+    { title: "Today — Alpha Momentum" },
+    { name: "description", content: "Your day's execution plan: focused blocks tied to strategic outcomes." },
+    { property: "og:title", content: "Today — Alpha Momentum" },
+    { property: "og:description", content: "Plan today around your highest-leverage outcomes." },
+  ] }),
   component: TasksPage,
 });
 
-const DIFFICULTY = ["Easy", "Medium", "Hard"];
-const TYPES = ["Deep Work", "Review", "Admin", "Health", "Recovery"];
-const STATUSES = ["Not started", "In progress", "Completed"];
+const ENERGY = ["low", "medium", "high"] as const;
+const TYPES = ["deep", "shallow", "admin", "decision", "research", "waiting"] as const;
+const STATUSES = ["pending", "in_progress", "done", "deferred"] as const;
 
 function TasksPage() {
   const { user } = useAuth();
@@ -35,19 +40,20 @@ function TasksPage() {
     queryKey: ["tasks", userId, today],
     queryFn: async () => {
       const { data } = await supabase
-        .from("daily_tasks")
+        .from("tasks")
         .select("*")
         .eq("user_id", userId)
         .eq("task_date", today)
+        .is("deleted_at", null)
         .order("created_at");
       return data ?? [];
     },
   });
 
-  const goals = useQuery({
-    queryKey: ["all-goals", userId],
+  const outcomes = useQuery({
+    queryKey: ["all-outcomes", userId],
     queryFn: async () => {
-      const { data } = await supabase.from("weekly_goals").select("id, title").eq("user_id", userId);
+      const { data } = await supabase.from("outcomes").select("id, title").eq("user_id", userId).is("deleted_at", null).eq("status", "active");
       return data ?? [];
     },
   });
@@ -55,68 +61,59 @@ function TasksPage() {
   const create = useMutation({
     mutationFn: async ({ task, intention }: any) => {
       const { data, error } = await supabase
-        .from("daily_tasks")
+        .from("tasks")
         .insert({ ...task, user_id: userId, task_date: today })
         .select()
         .single();
       if (error) throw error;
       if (intention?.if_context && intention?.then_action) {
-        await supabase.from("implementation_intentions").insert({
-          ...intention, user_id: userId, task_id: data.id,
+        await supabase.from("intentions").insert({
+          user_id: userId,
+          task_id: data.id,
+          if_context: intention.if_context,
+          then_action: intention.then_action,
+          obstacle: intention.obstacle || null,
+          backup_plan: intention.backup_plan || null,
         });
-        if (intention.obstacle && intention.backup_plan) {
-          await supabase.from("achievements").upsert(
-            { user_id: userId, badge_name: "Obstacle Solver", badge_description: "Created an if-then plan with a backup." },
-            { onConflict: "user_id,badge_name" },
-          );
-        }
       }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["dash-tasks"] });
-      qc.invalidateQueries({ queryKey: ["dash-week-tasks"] });
-      qc.invalidateQueries({ queryKey: ["all-badges"] });
-      qc.invalidateQueries({ queryKey: ["dash-badges"] });
       setOpen(false);
       toast.success("Task saved.");
     },
-    onError: (e: any) => toast.error(e.message ?? "Could not save task."),
+    onError: (e: any) => toast.error(e.message),
   });
 
   const setStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const completed_at = status === "Completed" ? new Date().toISOString() : null;
-      const { error } = await supabase.from("daily_tasks").update({ status, completed_at }).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["tasks"] });
-      qc.invalidateQueries({ queryKey: ["dash-tasks"] });
-      qc.invalidateQueries({ queryKey: ["dash-week-tasks"] });
-    },
-    onError: (e: any) => toast.error(e.message ?? "Could not update task."),
-  });
-
-  const del = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("daily_tasks").delete().eq("id", id);
+      const completed_at = status === "done" ? new Date().toISOString() : null;
+      const { error } = await supabase.from("tasks").update({ status, completed_at }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks"] }),
-    onError: (e: any) => toast.error(e.message ?? "Could not delete task."),
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const softDelete = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("tasks").update({ deleted_at: new Date().toISOString() }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks"] }),
   });
 
   return (
     <PageContainer>
       <PageHeader
-        title="Today's Tasks"
+        title="Today"
         description={format(new Date(), "EEEE, MMM d")}
         action={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild><Button><Plus className="mr-1 h-4 w-4" /> New task</Button></DialogTrigger>
             <TaskDialog
-              goals={goals.data ?? []}
+              outcomes={outcomes.data ?? []}
               saving={create.isPending}
               onSave={(t, i) => create.mutate({ task: t, intention: i })}
             />
@@ -125,25 +122,20 @@ function TasksPage() {
       />
 
       {tasks.isPending ? (
-        <Card><CardContent className="p-12 text-center text-sm text-muted-foreground">Loading today's tasks…</CardContent></Card>
-      ) : tasks.isError ? (
-        <Card><CardContent className="p-12 text-center">
-          <p className="text-sm text-destructive">Could not load tasks. Check your connection and try again.</p>
-          <Button variant="outline" size="sm" className="mt-3" onClick={() => tasks.refetch()}>Retry</Button>
-        </CardContent></Card>
+        <Card><CardContent className="p-12 text-center text-sm text-muted-foreground">Loading…</CardContent></Card>
       ) : tasks.data && tasks.data.length > 0 ? (
         <div className="space-y-2">
-          {tasks.data.map((t) => (
+          {tasks.data.map((t: any) => (
             <Card key={t.id}>
               <CardContent className="flex flex-wrap items-center gap-3 p-4 sm:gap-4">
                 <Checkbox
-                  checked={t.status === "Completed"}
-                  onCheckedChange={(v) => setStatus.mutate({ id: t.id, status: v ? "Completed" : "Not started" })}
+                  checked={t.status === "done"}
+                  onCheckedChange={(v) => setStatus.mutate({ id: t.id, status: v ? "done" : "pending" })}
                 />
                 <div className="min-w-0 flex-1">
-                  <div className={`font-medium ${t.status === "Completed" ? "line-through text-muted-foreground" : ""}`}>{t.title}</div>
+                  <div className={`font-medium ${t.status === "done" ? "line-through text-muted-foreground" : ""}`}>{t.title}</div>
                   <div className="text-xs text-muted-foreground">
-                    {t.task_type} · {t.estimated_minutes} min · {t.difficulty}
+                    {t.task_type} · {t.estimated_minutes} min · {t.energy_required} energy
                     {t.planned_time && ` · ${t.planned_time}`}
                   </div>
                 </div>
@@ -151,7 +143,7 @@ function TasksPage() {
                   <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                 </Select>
-                <Button variant="ghost" size="icon" onClick={() => del.mutate(t.id)}>
+                <Button variant="ghost" size="icon" onClick={() => softDelete.mutate(t.id)}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </CardContent>
@@ -160,41 +152,41 @@ function TasksPage() {
         </div>
       ) : (
         <Card><CardContent className="p-12 text-center text-muted-foreground">
-          No tasks yet. Add one task to start today's execution plan.
+          No tasks for today. Add one to start executing.
         </CardContent></Card>
       )}
     </PageContainer>
   );
 }
 
-function TaskDialog({ goals, onSave, saving }: { goals: any[]; saving: boolean; onSave: (t: any, i: any) => void }) {
+function TaskDialog({ outcomes, onSave, saving }: { outcomes: any[]; saving: boolean; onSave: (t: any, i: any) => void }) {
   const [task, setTask] = useState<any>({
-    title: "", weekly_goal_id: null, estimated_minutes: 25,
-    difficulty: "Medium", task_type: "Deep Work", planned_time: "", status: "Not started",
+    title: "", outcome_id: null, estimated_minutes: 60,
+    energy_required: "medium", task_type: "deep", planned_time: "", status: "pending",
   });
   const [intent, setIntent] = useState({
-    if_context: "", then_action: "", duration: "", obstacle: "", backup_plan: "",
+    if_context: "", then_action: "", obstacle: "", backup_plan: "",
   });
   return (
     <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
       <DialogHeader><DialogTitle>New task</DialogTitle></DialogHeader>
       <div className="space-y-3">
-        <div><Label>Title</Label><Input value={task.title} onChange={(e) => setTask({ ...task, title: e.target.value })} placeholder="e.g., 25-min SAT Math drills" /></div>
-        <div><Label>Related weekly goal (optional)</Label>
-          <Select value={task.weekly_goal_id ?? "none"} onValueChange={(v) => setTask({ ...task, weekly_goal_id: v === "none" ? null : v })}>
+        <div><Label>Title</Label><Input value={task.title} onChange={(e) => setTask({ ...task, title: e.target.value })} placeholder="e.g., Draft Q3 board deck outline" /></div>
+        <div><Label>Related outcome (optional)</Label>
+          <Select value={task.outcome_id ?? "none"} onValueChange={(v) => setTask({ ...task, outcome_id: v === "none" ? null : v })}>
             <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">None</SelectItem>
-              {goals.map((g) => <SelectItem key={g.id} value={g.id}>{g.title}</SelectItem>)}
+              {outcomes.map((g) => <SelectItem key={g.id} value={g.id}>{g.title}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
         <div className="grid grid-cols-3 gap-2">
           <div><Label>Minutes</Label><Input type="number" value={task.estimated_minutes} onChange={(e) => setTask({ ...task, estimated_minutes: Number(e.target.value) })} /></div>
-          <div><Label>Difficulty</Label>
-            <Select value={task.difficulty} onValueChange={(v) => setTask({ ...task, difficulty: v })}>
+          <div><Label>Energy</Label>
+            <Select value={task.energy_required} onValueChange={(v) => setTask({ ...task, energy_required: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{DIFFICULTY.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+              <SelectContent>{ENERGY.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div><Label>Type</Label>
@@ -204,21 +196,15 @@ function TaskDialog({ goals, onSave, saving }: { goals: any[]; saving: boolean; 
             </Select>
           </div>
         </div>
-        <div><Label>Planned time</Label><Input value={task.planned_time} onChange={(e) => setTask({ ...task, planned_time: e.target.value })} placeholder="e.g., 7:30pm" /></div>
+        <div><Label>Planned time</Label><Input value={task.planned_time} onChange={(e) => setTask({ ...task, planned_time: e.target.value })} placeholder="e.g., 9:00–10:00" /></div>
 
         <div className="rounded-lg border border-dashed border-border bg-muted/30 p-3">
           <div className="mb-2 text-sm font-medium">Implementation intention (if-then)</div>
-          <p className="mb-3 text-xs text-muted-foreground">
-            Research shows specifying when, where, and how dramatically increases follow-through.
-          </p>
           <div className="space-y-2">
-            <div><Label className="text-xs">If…</Label><Input value={intent.if_context} onChange={(e) => setIntent({ ...intent, if_context: e.target.value })} placeholder="it is 7:30pm after dinner" /></div>
-            <div><Label className="text-xs">Then I will…</Label><Input value={intent.then_action} onChange={(e) => setIntent({ ...intent, then_action: e.target.value })} placeholder="practice SAT Math" /></div>
-            <div className="grid grid-cols-2 gap-2">
-              <div><Label className="text-xs">For how long</Label><Input value={intent.duration} onChange={(e) => setIntent({ ...intent, duration: e.target.value })} placeholder="25 min" /></div>
-              <div><Label className="text-xs">Possible obstacle</Label><Input value={intent.obstacle} onChange={(e) => setIntent({ ...intent, obstacle: e.target.value })} placeholder="phone distraction" /></div>
-            </div>
-            <div><Label className="text-xs">Backup plan</Label><Input value={intent.backup_plan} onChange={(e) => setIntent({ ...intent, backup_plan: e.target.value })} placeholder="put phone in other room" /></div>
+            <div><Label className="text-xs">If…</Label><Input value={intent.if_context} onChange={(e) => setIntent({ ...intent, if_context: e.target.value })} placeholder="it is 9:00 after my first coffee" /></div>
+            <div><Label className="text-xs">Then I will…</Label><Input value={intent.then_action} onChange={(e) => setIntent({ ...intent, then_action: e.target.value })} placeholder="open the deck and outline 3 sections" /></div>
+            <div><Label className="text-xs">Obstacle</Label><Input value={intent.obstacle} onChange={(e) => setIntent({ ...intent, obstacle: e.target.value })} placeholder="slack pings" /></div>
+            <div><Label className="text-xs">Backup plan</Label><Input value={intent.backup_plan} onChange={(e) => setIntent({ ...intent, backup_plan: e.target.value })} placeholder="close slack, mute phone for 45 min" /></div>
           </div>
         </div>
 

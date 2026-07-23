@@ -7,23 +7,36 @@ import { PageContainer, PageHeader } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { LogOut } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/settings")({
-  head: () => ({ meta: [{ title: "Settings" }] }),
+  head: () => ({ meta: [
+    { title: "Settings — Alpha Momentum" },
+    { name: "description", content: "Profile, working preferences, and account for Alpha Momentum." },
+    { property: "og:title", content: "Settings — Alpha Momentum" },
+    { property: "og:description", content: "Configure how Alpha Momentum works for you." },
+  ] }),
   component: SettingsPage,
 });
+
+const ROLES = ["Founder / CEO", "Executive", "Manager", "Individual Contributor", "Student", "Investor", "Other"];
 
 function SettingsPage() {
   const { user, signOut } = useAuth();
   const userId = user!.id;
   const qc = useQueryClient();
-  
-  const [display_name, setName] = useState("");
-  const [student_type, setType] = useState("High school");
+
+  const [form, setForm] = useState({
+    display_name: "",
+    role: "",
+    profession: "",
+    top_objectives: "",
+    tone: "direct",
+  });
 
   const profile = useQuery({
     queryKey: ["profile", userId],
@@ -34,16 +47,20 @@ function SettingsPage() {
   });
 
   useEffect(() => {
-    if (profile.data) {
-      setName(profile.data.display_name ?? "");
-      setType(profile.data.student_type ?? "High school");
-    }
+    if (profile.data) setForm({
+      display_name: profile.data.display_name ?? "",
+      role: profile.data.role ?? "",
+      profession: profile.data.profession ?? "",
+      top_objectives: profile.data.top_objectives ?? "",
+      tone: profile.data.tone ?? "direct",
+    });
   }, [profile.data]);
 
   const save = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("profiles").update({
-        display_name, student_type, updated_at: new Date().toISOString(),
+        ...form,
+        updated_at: new Date().toISOString(),
       }).eq("user_id", userId);
       if (error) throw error;
     },
@@ -56,19 +73,28 @@ function SettingsPage() {
 
   return (
     <PageContainer>
-      <PageHeader title="Settings" description="Profile, preferences, and account." />
+      <PageHeader title="Settings" description="Profile, working preferences, and account." />
 
       <Card><CardContent className="space-y-4 p-6">
-        <div><Label>Display name</Label><Input value={display_name} onChange={(e) => setName(e.target.value)} /></div>
+        <div><Label>Display name</Label><Input value={form.display_name} onChange={(e) => setForm({ ...form, display_name: e.target.value })} /></div>
         <div><Label>Email</Label><Input value={user?.email ?? ""} disabled /></div>
-        <div><Label>Student type</Label>
-          <Select value={student_type} onValueChange={setType}>
+        <div><Label>Role</Label>
+          <Select value={form.role || undefined} onValueChange={(v) => setForm({ ...form, role: v })}>
+            <SelectTrigger><SelectValue placeholder="Select your role" /></SelectTrigger>
+            <SelectContent>{ROLES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        <div><Label>Profession / industry</Label><Input value={form.profession} onChange={(e) => setForm({ ...form, profession: e.target.value })} placeholder="e.g., SaaS founder, VC associate" /></div>
+        <div><Label>Top objectives (this quarter)</Label>
+          <Textarea rows={3} value={form.top_objectives} onChange={(e) => setForm({ ...form, top_objectives: e.target.value })} placeholder="What has to be true by end of quarter." />
+        </div>
+        <div><Label>Coach tone</Label>
+          <Select value={form.tone} onValueChange={(v) => setForm({ ...form, tone: v })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="High school">High school</SelectItem>
-              <SelectItem value="College">College</SelectItem>
-              <SelectItem value="Gap year">Gap year</SelectItem>
-              <SelectItem value="Other">Other</SelectItem>
+              <SelectItem value="direct">Direct</SelectItem>
+              <SelectItem value="supportive">Supportive</SelectItem>
+              <SelectItem value="analytical">Analytical</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -80,10 +106,10 @@ function SettingsPage() {
       <Card className="mt-6"><CardContent className="space-y-3 p-6">
         <h3 className="font-semibold">Data & privacy</h3>
         <p className="text-sm text-muted-foreground">
-          Your check-ins, goals, tasks, intentions, recovery plans, and achievements are private to your account. Other users cannot see your data.
+          Your outcomes, tasks, check-ins, intentions, recovery plans, and milestones are private to your account. Other users cannot see your data.
         </p>
         <p className="rounded-md border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
-          This product supports productivity, self-control, and wellness habits. It is not medical advice, therapy, or diagnosis.
+          Alpha Momentum supports professional performance and wellness habits. It is not medical advice, therapy, or diagnosis.
         </p>
       </CardContent></Card>
 

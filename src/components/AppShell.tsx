@@ -24,16 +24,16 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/goals", label: "Weekly Goals", icon: Target },
+  { to: "/dashboard", label: "Command Center", icon: LayoutDashboard },
+  { to: "/goals", label: "Outcomes", icon: Target },
   { to: "/coach", label: "AI Coach", icon: Mic },
-  { to: "/tasks", label: "Today's Tasks", icon: ListTodo },
-  { to: "/checkin", label: "Daily Check-In", icon: HeartPulse },
-  { to: "/recovery", label: "Recovery Mode", icon: RefreshCw },
-  { to: "/progress", label: "Progress", icon: TrendingUp },
-  { to: "/intentions", label: "If-Then Builder", icon: Zap },
+  { to: "/tasks", label: "Today", icon: ListTodo },
+  { to: "/checkin", label: "Check-In", icon: HeartPulse },
+  { to: "/recovery", label: "Recovery", icon: RefreshCw },
+  { to: "/progress", label: "Telemetry", icon: TrendingUp },
+  { to: "/intentions", label: "Intentions", icon: Zap },
   { to: "/breakdown", label: "AI Breakdown", icon: Brain },
-  { to: "/achievements", label: "Achievements", icon: Award },
+  { to: "/achievements", label: "Milestones", icon: Award },
   { to: "/feedback", label: "Beta Feedback", icon: MessageCircle },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
@@ -45,7 +45,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen w-full bg-background">
-      {/* Sidebar */}
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-40 w-64 flex-col border-r border-sidebar-border bg-sidebar transition-transform md:static md:flex md:translate-x-0",
@@ -58,7 +57,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           <div className="flex flex-col leading-tight">
             <span className="text-sm font-semibold">{BRAND.short}</span>
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Beta</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Alpha</span>
           </div>
         </div>
         <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
@@ -91,7 +90,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      {/* Main */}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur md:hidden">
           <Button variant="ghost" size="icon" onClick={() => setOpen(!open)}>
