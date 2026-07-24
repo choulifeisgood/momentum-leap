@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { softDeleteWithUndo } from "@/lib/undo";
+
 import { format } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/tasks")({
@@ -96,13 +98,15 @@ function TasksPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const softDelete = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("tasks").update({ deleted_at: new Date().toISOString() }).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks"] }),
-  });
+  const doDelete = (id: string) => {
+    softDeleteWithUndo({
+      table: "tasks",
+      id,
+      label: "Task",
+      onChange: () => qc.invalidateQueries({ queryKey: ["tasks"] }),
+    });
+  };
+
 
   return (
     <PageContainer>
@@ -143,9 +147,10 @@ function TasksPage() {
                   <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                 </Select>
-                <Button variant="ghost" size="icon" onClick={() => softDelete.mutate(t.id)}>
+                <Button variant="ghost" size="icon" onClick={() => doDelete(t.id)}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
+
               </CardContent>
             </Card>
           ))}
