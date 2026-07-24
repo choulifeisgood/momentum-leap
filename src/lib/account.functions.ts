@@ -18,13 +18,14 @@ export const exportUserData = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const out: Record<string, unknown> = { exported_at: new Date().toISOString(), user_id: userId };
+    const result: Record<string, any[]> = {};
     for (const t of TABLES) {
       const { data } = await (supabase as any).from(t).select("*").eq("user_id", userId);
-      out[t] = data ?? [];
+      result[t] = data ?? [];
     }
-    return out;
+    return { exported_at: new Date().toISOString(), user_id: userId, data: result };
   });
+
 
 export const deleteAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
