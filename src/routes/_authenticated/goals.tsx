@@ -153,9 +153,10 @@ function OutcomesPage() {
                       <CheckCircle2 className="mr-1 h-4 w-4" /> Ship
                     </Button>
                   )}
-                  <Button variant="ghost" size="icon" className="ml-auto" onClick={() => softDelete.mutate(g.id)}>
+                  <Button variant="ghost" size="icon" className="ml-auto" onClick={() => doDelete(g.id)}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
+
                 </div>
               </CardContent>
             </Card>
