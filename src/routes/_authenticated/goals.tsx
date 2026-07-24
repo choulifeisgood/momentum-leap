@@ -13,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Trash2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { softDeleteWithUndo } from "@/lib/undo";
+
 
 export const Route = createFileRoute("/_authenticated/goals")({
   head: () => ({ meta: [
@@ -73,17 +75,15 @@ function OutcomesPage() {
     onError: (e: any) => toast.error(e.message ?? "Could not save outcome."),
   });
 
-  const softDelete = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("outcomes").update({ deleted_at: new Date().toISOString() }).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["outcomes"] });
-      toast.success("Moved to trash.");
-    },
-    onError: (e: any) => toast.error(e.message),
-  });
+  const doDelete = (id: string) => {
+    softDeleteWithUndo({
+      table: "outcomes",
+      id,
+      label: "Outcome",
+      onChange: () => qc.invalidateQueries({ queryKey: ["outcomes"] }),
+    });
+  };
+
 
   const setStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
@@ -153,9 +153,10 @@ function OutcomesPage() {
                       <CheckCircle2 className="mr-1 h-4 w-4" /> Ship
                     </Button>
                   )}
-                  <Button variant="ghost" size="icon" className="ml-auto" onClick={() => softDelete.mutate(g.id)}>
+                  <Button variant="ghost" size="icon" className="ml-auto" onClick={() => doDelete(g.id)}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
+
                 </div>
               </CardContent>
             </Card>

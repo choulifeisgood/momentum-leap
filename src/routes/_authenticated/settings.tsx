@@ -11,7 +11,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { LogOut } from "lucide-react";
+import { LogOut, Download, Trash2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { exportUserData, deleteAccount } from "@/lib/account.functions";
+
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [
@@ -113,6 +116,15 @@ function SettingsPage() {
         </p>
       </CardContent></Card>
 
+      <Card className="mt-6"><CardContent className="space-y-3 p-6">
+        <h3 className="font-semibold">Your data</h3>
+        <div className="flex flex-wrap gap-2">
+          <ExportButton />
+          <DeleteAccountButton />
+        </div>
+        <p className="text-xs text-muted-foreground">Export downloads a JSON file with everything you've saved. Deleting your account permanently removes all your data and cannot be undone.</p>
+      </CardContent></Card>
+
       <Card className="mt-6"><CardContent className="p-6">
         <Button variant="outline" onClick={() => signOut()}>
           <LogOut className="mr-2 h-4 w-4" /> Sign out
@@ -121,3 +133,54 @@ function SettingsPage() {
     </PageContainer>
   );
 }
+
+function ExportButton() {
+  const run = useServerFn(exportUserData);
+  const [busy, setBusy] = useState(false);
+  return (
+    <Button variant="outline" disabled={busy} onClick={async () => {
+      setBusy(true);
+      try {
+        const data = await run({});
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `alpha-momentum-export-${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success("Export ready.");
+      } catch (e: any) {
+        toast.error(e.message ?? "Export failed.");
+      } finally {
+        setBusy(false);
+      }
+    }}>
+      <Download className="mr-2 h-4 w-4" /> {busy ? "Preparing…" : "Export my data"}
+    </Button>
+  );
+}
+
+function DeleteAccountButton() {
+  const run = useServerFn(deleteAccount);
+  const [busy, setBusy] = useState(false);
+  return (
+    <Button variant="destructive" disabled={busy} onClick={async () => {
+      if (!window.confirm("Permanently delete your account and all data? This cannot be undone.")) return;
+      const check = window.prompt('Type "delete" to confirm.');
+      if (check?.toLowerCase() !== "delete") return;
+      setBusy(true);
+      try {
+        await run({});
+        toast.success("Account deleted.");
+        window.location.href = "/";
+      } catch (e: any) {
+        toast.error(e.message ?? "Deletion failed.");
+        setBusy(false);
+      }
+    }}>
+      <Trash2 className="mr-2 h-4 w-4" /> {busy ? "Deleting…" : "Delete account"}
+    </Button>
+  );
+}
+
