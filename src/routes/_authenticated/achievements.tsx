@@ -1,11 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { PageContainer, PageHeader } from "@/components/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Award, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { evaluateMilestones, MILESTONE_CATALOG } from "@/lib/milestones.functions";
 
 export const Route = createFileRoute("/_authenticated/achievements")({
   head: () => ({ meta: [
@@ -17,17 +20,10 @@ export const Route = createFileRoute("/_authenticated/achievements")({
   component: MilestonesPage,
 });
 
-const ALL: { name: string; description: string; category: string }[] = [
-  { name: "Clarified Intent", description: "Set an outcome with a clear 'why it matters'.", category: "clarity" },
-  { name: "Shipped an Outcome", description: "Closed out a strategic outcome.", category: "execution" },
-  { name: "Obstacle Planned", description: "Wrote an if-then with a real backup plan.", category: "planning" },
-  { name: "Sleep Protected", description: "Logged 7.5+ hours of sleep.", category: "health" },
-  { name: "Contained the Shock", description: "Used recovery mode to restart cleanly.", category: "resilience" },
-];
-
 function MilestonesPage() {
   const { user } = useAuth();
   const userId = user!.id;
+  const evaluate = useServerFn(evaluateMilestones);
 
   const unlocked = useQuery({
     queryKey: ["milestones", userId],
@@ -37,16 +33,21 @@ function MilestonesPage() {
     },
   });
 
+  useEffect(() => {
+    evaluate({}).then(() => unlocked.refetch()).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const set = unlocked.data ?? new Set<string>();
 
   return (
     <PageContainer>
       <PageHeader
         title="Milestones"
-        description="Evidence of who you're becoming as an operator."
+        description="Evidence of who you're becoming as an operator. Auto-unlocked from your real activity."
       />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {ALL.map((b) => {
+        {MILESTONE_CATALOG.map((b) => {
           const got = set.has(b.name);
           return (
             <Card key={b.name} className={cn(!got && "opacity-60")}>
