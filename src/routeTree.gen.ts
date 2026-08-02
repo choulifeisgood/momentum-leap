@@ -18,6 +18,7 @@ import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedRecoveryRouteImport } from './routes/_authenticated/recovery'
 import { Route as AuthenticatedProgressRouteImport } from './routes/_authenticated/progress'
+import { Route as AuthenticatedPlannerRouteImport } from './routes/_authenticated/planner'
 import { Route as AuthenticatedIntentionsRouteImport } from './routes/_authenticated/intentions'
 import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated/goals'
 import { Route as AuthenticatedFeedbackRouteImport } from './routes/_authenticated/feedback'
@@ -69,6 +70,11 @@ const AuthenticatedRecoveryRoute = AuthenticatedRecoveryRouteImport.update({
 const AuthenticatedProgressRoute = AuthenticatedProgressRouteImport.update({
   id: '/progress',
   path: '/progress',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPlannerRoute = AuthenticatedPlannerRouteImport.update({
+  id: '/planner',
+  path: '/planner',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedIntentionsRoute = AuthenticatedIntentionsRouteImport.update({
@@ -125,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/feedback': typeof AuthenticatedFeedbackRoute
   '/goals': typeof AuthenticatedGoalsRoute
   '/intentions': typeof AuthenticatedIntentionsRoute
+  '/planner': typeof AuthenticatedPlannerRoute
   '/progress': typeof AuthenticatedProgressRoute
   '/recovery': typeof AuthenticatedRecoveryRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -143,6 +150,7 @@ export interface FileRoutesByTo {
   '/feedback': typeof AuthenticatedFeedbackRoute
   '/goals': typeof AuthenticatedGoalsRoute
   '/intentions': typeof AuthenticatedIntentionsRoute
+  '/planner': typeof AuthenticatedPlannerRoute
   '/progress': typeof AuthenticatedProgressRoute
   '/recovery': typeof AuthenticatedRecoveryRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -163,6 +171,7 @@ export interface FileRoutesById {
   '/_authenticated/feedback': typeof AuthenticatedFeedbackRoute
   '/_authenticated/goals': typeof AuthenticatedGoalsRoute
   '/_authenticated/intentions': typeof AuthenticatedIntentionsRoute
+  '/_authenticated/planner': typeof AuthenticatedPlannerRoute
   '/_authenticated/progress': typeof AuthenticatedProgressRoute
   '/_authenticated/recovery': typeof AuthenticatedRecoveryRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -183,6 +192,7 @@ export interface FileRouteTypes {
     | '/feedback'
     | '/goals'
     | '/intentions'
+    | '/planner'
     | '/progress'
     | '/recovery'
     | '/settings'
@@ -201,6 +211,7 @@ export interface FileRouteTypes {
     | '/feedback'
     | '/goals'
     | '/intentions'
+    | '/planner'
     | '/progress'
     | '/recovery'
     | '/settings'
@@ -220,6 +231,7 @@ export interface FileRouteTypes {
     | '/_authenticated/feedback'
     | '/_authenticated/goals'
     | '/_authenticated/intentions'
+    | '/_authenticated/planner'
     | '/_authenticated/progress'
     | '/_authenticated/recovery'
     | '/_authenticated/settings'
@@ -299,6 +311,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProgressRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/planner': {
+      id: '/_authenticated/planner'
+      path: '/planner'
+      fullPath: '/planner'
+      preLoaderRoute: typeof AuthenticatedPlannerRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/intentions': {
       id: '/_authenticated/intentions'
       path: '/intentions'
@@ -367,6 +386,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFeedbackRoute: typeof AuthenticatedFeedbackRoute
   AuthenticatedGoalsRoute: typeof AuthenticatedGoalsRoute
   AuthenticatedIntentionsRoute: typeof AuthenticatedIntentionsRoute
+  AuthenticatedPlannerRoute: typeof AuthenticatedPlannerRoute
   AuthenticatedProgressRoute: typeof AuthenticatedProgressRoute
   AuthenticatedRecoveryRoute: typeof AuthenticatedRecoveryRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -383,6 +403,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFeedbackRoute: AuthenticatedFeedbackRoute,
   AuthenticatedGoalsRoute: AuthenticatedGoalsRoute,
   AuthenticatedIntentionsRoute: AuthenticatedIntentionsRoute,
+  AuthenticatedPlannerRoute: AuthenticatedPlannerRoute,
   AuthenticatedProgressRoute: AuthenticatedProgressRoute,
   AuthenticatedRecoveryRoute: AuthenticatedRecoveryRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
