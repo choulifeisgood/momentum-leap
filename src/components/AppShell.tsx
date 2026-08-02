@@ -30,6 +30,7 @@ const nav = [
   { to: "/dashboard", label: "Command Center", icon: LayoutDashboard },
   { to: "/goals", label: "Outcomes", icon: Target },
   { to: "/coach", label: "AI Coach", icon: Mic },
+  { to: "/planner", label: "AI Strategist", icon: Sparkles },
   { to: "/tasks", label: "Today", icon: ListTodo },
   { to: "/checkin", label: "Check-In", icon: HeartPulse },
   { to: "/recovery", label: "Recovery", icon: RefreshCw },
