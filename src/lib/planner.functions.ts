@@ -112,7 +112,7 @@ export const generateDayPlan = createServerFn({ method: "POST" })
 
     const parsed = await chatJSON(
       `You are a high-performance execution strategist. Given today's tasks, active strategic outcomes, the user's check-in (energy, stress, sleep, available capacity) and their profile, produce a realistic sequenced day plan.
-Rules: never overload beyond available capacity; put deep work in high-energy windows; explicitly cut what does not fit; be direct, no fluff.
+Rules: schedule around the calendar events given (never double-book); never overload beyond available capacity; put deep work in high-energy windows; explicitly cut what does not fit; be direct, no fluff.
 Return STRICT JSON: {"headline": string, "capacity_read": string, "blocks": [{"time": string, "task": string, "minutes": number, "why": string}], "cut_list": [string], "risk": string}.`,
       JSON.stringify(payload),
     );
