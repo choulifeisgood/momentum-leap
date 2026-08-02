@@ -25,8 +25,10 @@ import { Route as AuthenticatedFeedbackRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCoachRouteImport } from './routes/_authenticated/coach'
 import { Route as AuthenticatedCheckinRouteImport } from './routes/_authenticated/checkin'
+import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedBreakdownRouteImport } from './routes/_authenticated/breakdown'
 import { Route as AuthenticatedAchievementsRouteImport } from './routes/_authenticated/achievements'
+import { Route as OauthGoogleCalendarReturnRouteImport } from './routes/oauth/google-calendar.return'
 
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
@@ -107,6 +109,11 @@ const AuthenticatedCheckinRoute = AuthenticatedCheckinRouteImport.update({
   path: '/checkin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedBreakdownRoute = AuthenticatedBreakdownRouteImport.update({
   id: '/breakdown',
   path: '/breakdown',
@@ -118,6 +125,12 @@ const AuthenticatedAchievementsRoute =
     path: '/achievements',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const OauthGoogleCalendarReturnRoute =
+  OauthGoogleCalendarReturnRouteImport.update({
+    id: '/oauth/google-calendar/return',
+    path: '/oauth/google-calendar/return',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -125,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/achievements': typeof AuthenticatedAchievementsRoute
   '/breakdown': typeof AuthenticatedBreakdownRoute
+  '/calendar': typeof AuthenticatedCalendarRoute
   '/checkin': typeof AuthenticatedCheckinRoute
   '/coach': typeof AuthenticatedCoachRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -137,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/trash': typeof AuthenticatedTrashRoute
+  '/oauth/google-calendar/return': typeof OauthGoogleCalendarReturnRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -144,6 +159,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/achievements': typeof AuthenticatedAchievementsRoute
   '/breakdown': typeof AuthenticatedBreakdownRoute
+  '/calendar': typeof AuthenticatedCalendarRoute
   '/checkin': typeof AuthenticatedCheckinRoute
   '/coach': typeof AuthenticatedCoachRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -156,6 +172,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/trash': typeof AuthenticatedTrashRoute
+  '/oauth/google-calendar/return': typeof OauthGoogleCalendarReturnRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -165,6 +182,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/_authenticated/achievements': typeof AuthenticatedAchievementsRoute
   '/_authenticated/breakdown': typeof AuthenticatedBreakdownRoute
+  '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/checkin': typeof AuthenticatedCheckinRoute
   '/_authenticated/coach': typeof AuthenticatedCoachRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -177,6 +195,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/tasks': typeof AuthenticatedTasksRoute
   '/_authenticated/trash': typeof AuthenticatedTrashRoute
+  '/oauth/google-calendar/return': typeof OauthGoogleCalendarReturnRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -186,6 +205,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/achievements'
     | '/breakdown'
+    | '/calendar'
     | '/checkin'
     | '/coach'
     | '/dashboard'
@@ -198,6 +218,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tasks'
     | '/trash'
+    | '/oauth/google-calendar/return'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -205,6 +226,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/achievements'
     | '/breakdown'
+    | '/calendar'
     | '/checkin'
     | '/coach'
     | '/dashboard'
@@ -217,6 +239,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tasks'
     | '/trash'
+    | '/oauth/google-calendar/return'
   id:
     | '__root__'
     | '/'
@@ -225,6 +248,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/_authenticated/achievements'
     | '/_authenticated/breakdown'
+    | '/_authenticated/calendar'
     | '/_authenticated/checkin'
     | '/_authenticated/coach'
     | '/_authenticated/dashboard'
@@ -237,6 +261,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/tasks'
     | '/_authenticated/trash'
+    | '/oauth/google-calendar/return'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -244,6 +269,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   OnboardingRoute: typeof OnboardingRoute
+  OauthGoogleCalendarReturnRoute: typeof OauthGoogleCalendarReturnRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -360,6 +386,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCheckinRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/calendar': {
+      id: '/_authenticated/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof AuthenticatedCalendarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/breakdown': {
       id: '/_authenticated/breakdown'
       path: '/breakdown'
@@ -374,12 +407,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAchievementsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/oauth/google-calendar/return': {
+      id: '/oauth/google-calendar/return'
+      path: '/oauth/google-calendar/return'
+      fullPath: '/oauth/google-calendar/return'
+      preLoaderRoute: typeof OauthGoogleCalendarReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAchievementsRoute: typeof AuthenticatedAchievementsRoute
   AuthenticatedBreakdownRoute: typeof AuthenticatedBreakdownRoute
+  AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedCheckinRoute: typeof AuthenticatedCheckinRoute
   AuthenticatedCoachRoute: typeof AuthenticatedCoachRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -397,6 +438,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAchievementsRoute: AuthenticatedAchievementsRoute,
   AuthenticatedBreakdownRoute: AuthenticatedBreakdownRoute,
+  AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedCheckinRoute: AuthenticatedCheckinRoute,
   AuthenticatedCoachRoute: AuthenticatedCoachRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
@@ -419,6 +461,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   OnboardingRoute: OnboardingRoute,
+  OauthGoogleCalendarReturnRoute: OauthGoogleCalendarReturnRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
