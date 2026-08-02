@@ -70,12 +70,44 @@ export const generateDayPlan = createServerFn({ method: "POST" })
         .eq("user_id", userId).maybeSingle(),
     ]);
 
+    // Real commitments from Google Calendar, when the user has connected it.
+    let calendar: unknown[] = [];
+    try {
+      const { getConnectionKeyForUser } = await import("@/lib/appUserConnections.server");
+      const key = await getConnectionKeyForUser(userId, "google_calendar");
+      if (key) {
+        const start = new Date(); start.setHours(0, 0, 0, 0);
+        const end = new Date(start); end.setDate(end.getDate() + 1);
+        const { callAsAppUser } = await import("@/integrations/lovable/appUserConnector");
+        const res = await callAsAppUser({
+          gatewayBaseUrl: "https://connector-gateway.lovable.dev",
+          connectionAPIKey: key,
+          connectorId: "google_calendar",
+          path: `/calendar/v3/calendars/primary/events?${new URLSearchParams({
+            timeMin: start.toISOString(), timeMax: end.toISOString(),
+            singleEvents: "true", orderBy: "startTime", maxResults: "50",
+          }).toString()}`,
+        });
+        if (res.ok) {
+          const json = (await res.json()) as { items?: any[] };
+          calendar = (json.items ?? []).map((e) => ({
+            summary: e.summary ?? "(busy)",
+            start: e.start?.dateTime ?? e.start?.date,
+            end: e.end?.dateTime ?? e.end?.date,
+          }));
+        }
+      }
+    } catch {
+      // calendar is optional context — never block the plan on it
+    }
+
     const payload = {
       today,
       tasks: tasksRes.data ?? [],
       outcomes: outcomesRes.data ?? [],
       checkin: checkinRes.data ?? null,
       profile: profileRes.data ?? null,
+      calendar,
     };
 
     const parsed = await chatJSON(
