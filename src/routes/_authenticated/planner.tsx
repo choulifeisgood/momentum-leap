@@ -31,13 +31,13 @@ function PlannerPage() {
   const [week, setWeek] = useState<WeeklySummary | null>(null);
 
   const planM = useMutation({
-    mutationFn: async () => (await planFn({ data: {} })) as DayPlan,
+    mutationFn: async () => (await planFn()) as DayPlan,
     onSuccess: setPlan,
     onError: (e: any) => toast.error(e.message),
   });
 
   const weekM = useMutation({
-    mutationFn: async () => (await weekFn({ data: {} })) as WeeklySummary,
+    mutationFn: async () => (await weekFn()) as WeeklySummary,
     onSuccess: setWeek,
     onError: (e: any) => toast.error(e.message),
   });
