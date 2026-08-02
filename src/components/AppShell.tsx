@@ -32,6 +32,7 @@ const nav = [
   { to: "/coach", label: "AI Coach", icon: Mic },
   { to: "/planner", label: "AI Strategist", icon: Sparkles },
   { to: "/tasks", label: "Today", icon: ListTodo },
+  { to: "/calendar", label: "Calendar", icon: CalendarDays },
   { to: "/checkin", label: "Check-In", icon: HeartPulse },
   { to: "/recovery", label: "Recovery", icon: RefreshCw },
   { to: "/progress", label: "Telemetry", icon: TrendingUp },
