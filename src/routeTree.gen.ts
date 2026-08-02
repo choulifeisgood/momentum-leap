@@ -25,6 +25,7 @@ import { Route as AuthenticatedFeedbackRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCoachRouteImport } from './routes/_authenticated/coach'
 import { Route as AuthenticatedCheckinRouteImport } from './routes/_authenticated/checkin'
+import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedBreakdownRouteImport } from './routes/_authenticated/breakdown'
 import { Route as AuthenticatedAchievementsRouteImport } from './routes/_authenticated/achievements'
 import { Route as OauthGoogleCalendarReturnRouteImport } from './routes/oauth/google-calendar.return'
@@ -108,6 +109,11 @@ const AuthenticatedCheckinRoute = AuthenticatedCheckinRouteImport.update({
   path: '/checkin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedBreakdownRoute = AuthenticatedBreakdownRouteImport.update({
   id: '/breakdown',
   path: '/breakdown',
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/achievements': typeof AuthenticatedAchievementsRoute
   '/breakdown': typeof AuthenticatedBreakdownRoute
+  '/calendar': typeof AuthenticatedCalendarRoute
   '/checkin': typeof AuthenticatedCheckinRoute
   '/coach': typeof AuthenticatedCoachRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/achievements': typeof AuthenticatedAchievementsRoute
   '/breakdown': typeof AuthenticatedBreakdownRoute
+  '/calendar': typeof AuthenticatedCalendarRoute
   '/checkin': typeof AuthenticatedCheckinRoute
   '/coach': typeof AuthenticatedCoachRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -174,6 +182,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/_authenticated/achievements': typeof AuthenticatedAchievementsRoute
   '/_authenticated/breakdown': typeof AuthenticatedBreakdownRoute
+  '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/checkin': typeof AuthenticatedCheckinRoute
   '/_authenticated/coach': typeof AuthenticatedCoachRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -196,6 +205,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/achievements'
     | '/breakdown'
+    | '/calendar'
     | '/checkin'
     | '/coach'
     | '/dashboard'
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/achievements'
     | '/breakdown'
+    | '/calendar'
     | '/checkin'
     | '/coach'
     | '/dashboard'
@@ -237,6 +248,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/_authenticated/achievements'
     | '/_authenticated/breakdown'
+    | '/_authenticated/calendar'
     | '/_authenticated/checkin'
     | '/_authenticated/coach'
     | '/_authenticated/dashboard'
@@ -374,6 +386,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCheckinRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/calendar': {
+      id: '/_authenticated/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof AuthenticatedCalendarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/breakdown': {
       id: '/_authenticated/breakdown'
       path: '/breakdown'
@@ -401,6 +420,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAchievementsRoute: typeof AuthenticatedAchievementsRoute
   AuthenticatedBreakdownRoute: typeof AuthenticatedBreakdownRoute
+  AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedCheckinRoute: typeof AuthenticatedCheckinRoute
   AuthenticatedCoachRoute: typeof AuthenticatedCoachRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -418,6 +438,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAchievementsRoute: AuthenticatedAchievementsRoute,
   AuthenticatedBreakdownRoute: AuthenticatedBreakdownRoute,
+  AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedCheckinRoute: AuthenticatedCheckinRoute,
   AuthenticatedCoachRoute: AuthenticatedCoachRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,

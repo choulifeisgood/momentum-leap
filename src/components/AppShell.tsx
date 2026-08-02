@@ -16,6 +16,7 @@ import {
   MessageCircle,
   Mic,
   Trash2,
+  CalendarDays,
 } from "lucide-react";
 import { CoachMic } from "@/components/CoachMic";
 import { CommandPalette } from "@/components/CommandPalette";
