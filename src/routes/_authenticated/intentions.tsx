@@ -110,9 +110,41 @@ function IntentionsPage() {
         ) : list.data && list.data.length > 0 ? (
           <div className="space-y-2">
             {list.data.map((i: any) => (
-              <Card key={i.id}><CardContent className="p-4 text-sm">
-                <p>If <strong>{i.if_context}</strong>, then I will <strong>{i.then_action}</strong>.</p>
-                {i.obstacle && <p className="mt-1 text-xs text-muted-foreground">If {i.obstacle} → {i.backup_plan}</p>}
+              <Card key={i.id}><CardContent className="flex items-start justify-between gap-3 p-4 text-sm">
+                <div className="min-w-0">
+                  <p>If <strong>{i.if_context}</strong>, then I will <strong>{i.then_action}</strong>.</p>
+                  {i.obstacle && <p className="mt-1 text-xs text-muted-foreground">If {i.obstacle} → {i.backup_plan}</p>}
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" aria-label="Delete intention" className="shrink-0 text-muted-foreground hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete this intention?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        “If {i.if_context}, then I will {i.then_action}.” It moves to Trash — you can restore it there for 30 days, or undo right away.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Keep it</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() =>
+                          softDeleteWithUndo({
+                            table: "intentions",
+                            id: i.id,
+                            label: "Intention",
+                            onChange: () => qc.invalidateQueries({ queryKey: ["intentions"] }),
+                          })
+                        }
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </CardContent></Card>
             ))}
           </div>
